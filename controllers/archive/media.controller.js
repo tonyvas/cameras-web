@@ -1,7 +1,7 @@
 const router = require('express').Router()
 
-const {BadRequestError, NotFoundError} = require('../errors');
-const service = require('../services/media.service');
+const {BadRequestError, NotFoundError} = require('../../errors');
+const service = require('../../services/archive/media.service');
 
 router.get('/thumbs/:id', async (req, res, next) => {
     try {

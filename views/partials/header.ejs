@@ -1,8 +1,25 @@
 <header>
-    <a href="/">NVR Web</a>
-
     <nav>
-        <a href="/sources">Sources</a>
-        <a href="/recordings">Recordings</a>
+        <div class="nav_group">
+            <a href="/"><strong>Cameras Web</strong></a>
+        </div>
+        
+        <div class="nav_separator"></div>
+
+        <div class="nav_group">
+            <a href="/live"><strong>Live</strong></a>
+
+            <a href="/live/montage" <% if (active == '/live/montage') { %> class="selected" <% } %>>Montage</a>
+            <a href="/live/cycler" <% if (active == '/live/cycler') { %> class="selected" <% } %>>Cycler</a>
+        </div>
+
+        <div class="nav_separator"></div>
+
+        <div class="nav_group">
+            <a href="/archive"><strong>Archive</strong></a>
+
+            <a href="/archive/sources" <% if (active == '/archive/sources') { %> class="selected" <% } %>>Sources</a>
+            <a href="/archive/recordings" <% if (active == '/archive/recordings') { %> class="selected" <% } %>>Recordings</a>
+        </div>
     </nav>
 </header>

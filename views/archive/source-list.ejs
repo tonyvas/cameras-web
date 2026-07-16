@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/public/css/common.css">
-    <link rel="stylesheet" href="/public/css/source-list.css">
+    <link rel="stylesheet" href="/public/css/archive/source-list.css">
 
     <title>Sources</title>
 </head>
 <body>
-    <%- include('partials/header') -%> 
+    <%- include('../partials/header', {active: '/archive/sources'}) -%> 
 
     <h1>Sources</h1>
 
@@ -39,7 +39,7 @@
                         <td><%= source.id %></td>
                         <td><%= source.name %></td>
                         <td><%= count %></td>
-                        <td><a href="/recordings?src=<%= source.id %>"><button class="action_button">Browse</button></a></td>
+                        <td><a href="/archive/recordings?src=<%= source.id %>"><button class="action_button">Browse</button></a></td>
                     </tr>
                 <% } %>
             </tbody>

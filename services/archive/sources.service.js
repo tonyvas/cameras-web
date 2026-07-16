@@ -1,7 +1,7 @@
-const db = require('../database/db');
+const db = require('../../database/db');
 
-const {NotFoundError} = require('../errors');
-const {Source, Recording} = require('../models/models')
+const {NotFoundError} = require('../../errors');
+const {Source, Recording} = require('../../models/models')
 
 /**
  * @param {number} id 

@@ -17,15 +17,10 @@ header{
     width: 100%;
 
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: start;
     align-items: center;
 
     background-color: #222;
-}
-
-header a{
-    padding-left: 20px;
-    padding-right: 20px;
 }
 
 header nav{
@@ -36,18 +31,56 @@ header nav{
     height: 50px;
 }
 
-header a{
+header nav .nav_separator{
+    width: 2px;
+    height: 50%;
+
+    background-color: white;
+}
+
+header nav .nav_group{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding: 0;
+    margin-left: 20px;
+    margin-right: 20px;
+
+    height: 30px;
+}
+
+header nav .nav_group a{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding-left: 10px;
+    padding-right: 10px;
+
     text-decoration: none;
     color: white;
 }
 
-header a:hover{
+header nav .nav_group > *:not(:first-child){
+    color: #bbb;
+}
+
+header nav .nav_group a:hover{
     text-decoration: underline;
+    color: white;
+}
+
+header nav .nav_group a.selected{
+    text-decoration: underline;
+    color: white;
 }
 
 main{
-    max-width: 75%;
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    max-width: 75%;
+    margin: 10px;
 }

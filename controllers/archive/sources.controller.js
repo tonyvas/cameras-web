@@ -1,7 +1,7 @@
 const router = require('express').Router()
 
-const {BadRequestError, NotFoundError} = require('../errors');
-const service = require('../services/sources.service');
+const {BadRequestError, NotFoundError} = require('../../errors');
+const service = require('../../services/archive/sources.service');
 
 router.get('/', async (req, res, next) => {
     try {
@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
             counts.push(await service.getSourceRecordingCount(source));
         }
         
-        res.render('source-list', { sources, counts });
+        res.render('archive/source-list', { sources, counts });
     } catch (err) {
         throw err;
     }

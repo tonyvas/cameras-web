@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/public/css/common.css">
-    <link rel="stylesheet" href="/public/css/recordings-list.css">
-    <link rel="stylesheet" href="/public/css/recordings-list-controls.css">
-    <link rel="stylesheet" href="/public/css/recordings-list-table.css">
+    <link rel="stylesheet" href="/public/css/archive/recordings-list.css">
+    <link rel="stylesheet" href="/public/css/archive/recordings-list-controls.css">
+    <link rel="stylesheet" href="/public/css/archive/recordings-list-table.css">
 
     <title>Recordings List</title>
 </head>
 <body>
-    <%- include('partials/header') -%> 
+    <%- include('../partials/header', {active: '/archive/recordings'}) -%> 
 
     <h1>Recordings</h1>
 
@@ -24,11 +24,11 @@
         </div>
 
         <div id="controls">
-            <%- include('partials/recording-list/controls') -%>
+            <%- include('../partials/recording-list/controls') -%>
         </div>
 
         <div id="results">
-            <%- include('partials/recording-list/table') -%>
+            <%- include('../partials/recording-list/table') -%>
         </div>
     </main>
 
@@ -60,6 +60,6 @@
         }
     </script>
 
-    <script src="/public/js/recordings-list.js"></script>
+    <script src="/public/js/archive/recordings-list.js"></script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/public/css/common.css">
+    <link rel="stylesheet" href="/public/css/live/cycler.css">
+    <link rel="stylesheet" href="/public/css/live/streamer.css">
+
+    <title>Cycler</title>
+</head>
+<body>
+    <%- include('../partials/header', {active: '/live/cycler'}) -%> 
+
+    <main>
+        <div id="controls">
+            <div class="control-item">
+                <label for="stream-select" id="stream-select-label">Stream</label>
+                <select id="stream-select">
+                    <% for (let [name, path] of Object.entries(streamers)) { %>
+                        <option value="/hls/<%= path %>/index.m3u8"><%= name %></option>
+                    <% } %>
+                </select>
+            </div>
+        </div>
+
+        <div id="streamers">
+            <div class="streamer">
+                <div class="streamer-header">
+                    <span class="streamer-title">N/A</span>
+                    <span class="streamer-bandwidth">N/A</span>
+                </div>
+                <div class="streamer-body">
+                    <video class="streamer-video" muted controls></video>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/public/js/live/hls.js"></script>
+
+    <script src="/public/js/live/main.js"></script>
+    <script src="/public/js/live/hls-streamer.js"></script>
+    <script src="/public/js/live/cycler.js"></script>
+</body>
+</html>

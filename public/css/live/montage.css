@@ -1,0 +1,42 @@
+main{
+    max-width: 100%;
+    row-gap: 10px;
+}
+
+/* Controls */
+
+#controls{
+    display: flex;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+.control-item{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    width: 150px;
+    padding: 5px;
+
+    background-color: #222;
+    border: 2px solid black;
+}
+
+/* Streamers */
+
+#streamers{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: 850px) {
+    #streamers {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}

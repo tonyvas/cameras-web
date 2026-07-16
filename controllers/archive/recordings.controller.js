@@ -1,8 +1,8 @@
 const router = require('express').Router()
 
-const {BadRequestError, NotFoundError} = require('../errors');
-const service = require('../services/recordings.service');
-const {formatDate, formatTime, formatBitrate, formatSize} = require('../utils');
+const {BadRequestError, NotFoundError} = require('../../errors');
+const service = require('../../services/archive/recordings.service');
+const {formatDate, formatTime, formatBitrate, formatSize} = require('../../utils');
 
 router.get('/', async (req, res, next) => {
     try {
@@ -54,7 +54,7 @@ router.get('/', async (req, res, next) => {
         let {recordings, oldest, hasOlder, newest, hasNewer} = await service.getPaginatedRecordings(sources, cursor, limit, desc, newerThanDateQuery, olderThanDateQuery, newerThanTimeQuery, olderThanTimeQuery);
         let allSources = await service.getSources();
 
-        res.render('recording-list-table.ejs', {
+        res.render('archive/recording-list.ejs', {
             formatDate, formatTime,
             sources: allSources,
             recordings, oldest, hasOlder, newest, hasNewer,
@@ -72,7 +72,7 @@ router.get('/:recording_id', async (req, res, next) => {
         let {next, prev} = await service.getRecordingNeighbors(recording);
         let related = await service.getRelatedRecordings(recording);
 
-        res.render('recording-details', { recording, next, prev, related, formatDate, formatTime, formatSize, formatBitrate});
+        res.render('archive/recording-details', { recording, next, prev, related, formatDate, formatTime, formatSize, formatBitrate});
     } catch (err) {
         throw err;
     }

@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/public/css/common.css">
-    <link rel="stylesheet" href="/public/css/recording-details.css">
+    <link rel="stylesheet" href="/public/css/archive/recording-details.css">
 
     <title>Recording <%= recording.id %></title>
 </head>
 <body>
-    <%- include('partials/header') -%> 
+    <%- include('../partials/header', {active: null}) -%> 
 
     <h1>Recording <%= recording.id %></h1>
 
     <main>
         <div id="media_container">
-            <video src="/media/videos/<%= recording.id %>" alt="<%= recording.id %> video" controls autoplay muted></video>
+            <video src="/archive/media/videos/<%= recording.id %>" alt="<%= recording.id %> video" controls autoplay muted></video>
 
             <div id="controls">
                 <button <%= prev ? '':'disabled' %> onclick="gotoRecording(<%= prev ? prev.id : -1 %>)">&#60;</button>
@@ -116,7 +116,7 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="/recordings/<%= r.id %>">
+                                <a href="/archive/recordings/<%= r.id %>">
                                     <button class="action_button">View</button>
                                 </a>
                             </td>
@@ -132,12 +132,12 @@
             let url = new URL(window.location);
             
             if (id >= 0){
-                url.pathname = `/recordings/${id}`;
+                url.pathname = `/archive/recordings/${id}`;
                 window.location = url;
             }
         }
     </script>
 
-    <script src="/public/js/recording-details.js"></script>
+    <script src="/public/js/archive/recording-details.js"></script>
 </body>
 </html>

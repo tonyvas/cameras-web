@@ -2,11 +2,20 @@ const router = require('express').Router()
 
 const { BadRequestError, NotFoundError } = require('./errors');
 
-router.get('/', (req, res) => res.redirect('/recordings'));
+router.get('/', (req, res) => res.redirect('/live'));
+router.get('/live', (req, res) => res.redirect('/live/montage'));
+router.get('/archive', (req, res) => res.redirect('/archive/recordings'));
 
-router.use('/media', require('./controllers/media.controller'));
-router.use('/sources', require('./controllers/sources.controller'));
-router.use('/recordings', require('./controllers/recordings.controller'));
+router.use('/live/montage', require('./controllers/live/montage.controller'));
+router.use('/live/cycler', require('./controllers/live/cycler.controller'));
+
+router.use('/archive/media', require('./controllers/archive/media.controller'));
+router.use('/archive/sources', require('./controllers/archive/sources.controller'));
+router.use('/archive/recordings', require('./controllers/archive/recordings.controller'));
+
+router.use((req, res) => {
+    throw new NotFoundError(`Nothing at ${req.url}`);
+});
 
 router.use(async (err, req, res, next) => {
     let logger = req.app.locals.webLogger;

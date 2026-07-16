@@ -1,0 +1,26 @@
+main{
+    row-gap: 10px;
+}
+
+/* Controls */
+
+#controls{
+    display: flex;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+.control-item{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    width: 150px;
+    padding: 5px;
+
+    background-color: #222;
+    border: 2px solid black;
+}
+
+/* Streamers */
