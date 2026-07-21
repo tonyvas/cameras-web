@@ -17,6 +17,12 @@
 /* ### Source controls ### */
 /* ####################### */
 
+#source_controls{
+    display: flex;
+    flex-direction: column;
+    row-gap: 5px;
+}
+
 #source_select_container{
     display: flex;
     flex-direction: column;
@@ -45,7 +51,18 @@
 /* ### Date controls ### */
 /* ##################### */
 
-.control_item .date_time_inputs{
+#jump_ts_controls, #jump_ts_controls form{
     display: flex;
     flex-direction: column;
+    row-gap: 5px;
+}
+
+#jump_ts_controls form div{
+    display: flex;
+    justify-content: space-between;
+    column-gap: 5px;
+}
+
+#jump_ts_controls form div * {
+    width: 50%;
 }

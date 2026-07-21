@@ -12,46 +12,44 @@ router.get('/', async (req, res, next) => {
         const limitQuery = req.query.lmt;
         const olderThanCursorQuery = req.query.otc;
         const newerThanCursorQuery = req.query.ntc;
-        const newerThanDateQuery = req.query.ntd;
-        const olderThanDateQuery = req.query.otd;
-        const newerThanTimeQuery = req.query.ntt;
-        const olderThanTimeQuery = req.query.ott;
-        const viewQuery = req.query.v;
-        
-        let sources = null;
-        let limit = null;
-        let cursor = null;
-        let desc = true;
+        const startTimestampQuery = req.query.sts;
 
         if (olderThanCursorQuery && newerThanCursorQuery){
+            // Allow only a single cursor
             throw new BadRequestError(`Multiple cursors provided, but only one supported!`);
         }
 
-        if (sourcesQuery){
-            sources = [];
-
-            for (let id of sourcesQuery.split('-')){
-                sources.push(await service.getSourceById(Number(id.trim())));
+        let sources = await (async () => {
+            if (sourcesQuery){
+                // Parse source IDs, and get Sources from database
+                let promises = sourcesQuery.split('-').map(id => service.getSourceById(Number(id.trim())));
+                return await Promise.all(promises);
             }
-        }
+            else{
+                return null;
+            }
+        })();
 
-        if (limitQuery){
-            limit = Number(limitQuery);
-        }
-        else{
-            limit = DEFAULT_LIMIT;
-        }
+        let limit = limitQuery ? Number(limitQuery) : DEFAULT_LIMIT;
 
-        if (olderThanCursorQuery){
-            cursor = await service.getRecordingById(olderThanCursorQuery);
-            desc = true;
-        }
-        else if (newerThanCursorQuery){
-            cursor = await service.getRecordingById(newerThanCursorQuery);
-            desc = false;
-        }
+        let [isChrono, cursor] = await (async () => {
+            if (newerThanCursorQuery){
+                // Going in chronological order
+                return [true, await service.getRecordingById(newerThanCursorQuery)];
+            }
+            else if (olderThanCursorQuery){
+                // Going in reverse chronological order
+                return [false, await service.getRecordingById(olderThanCursorQuery)];
+            }
+            else{
+                // Going in chronological order, but without anchor
+                return [false, null];
+            }
+        })();
+
+        let startTimestamp = startTimestampQuery ? Number(startTimestampQuery) : null;
         
-        let {recordings, oldest, hasOlder, newest, hasNewer} = await service.getPaginatedRecordings(sources, cursor, limit, desc, newerThanDateQuery, olderThanDateQuery, newerThanTimeQuery, olderThanTimeQuery);
+        let {recordings, oldest, hasOlder, newest, hasNewer} = await service.getPaginatedRecordings(sources, cursor, limit, isChrono, startTimestamp);
         let allSources = await service.getSources();
 
         res.render('archive/recording-list.ejs', {

@@ -34,29 +34,13 @@
 
     <script>
         function goNextPage(){
-            let url = new URL(window.location);
-            let params = url.searchParams;
-
             let id = <%= recordings.length > 0 ? recordings[recordings.length-1].id : -1 %>;
-            if (id >= 0){
-                params.delete('ntc');
-                params.set('otc', id);
-
-                window.location = url;
-            }
+            goOlderThanPage(id);
         }
 
         function goPrevPage(){
-            let url = new URL(window.location);
-            let params = url.searchParams;
-
             let id = <%= recordings.length > 0 ? recordings[0].id : -1 %>;
-            if (id >= 0){
-                params.delete('otc');
-                params.set('ntc', id);
-
-                window.location = url;
-            }
+            goNewerThanPage(id);
         }
     </script>
 

@@ -36,16 +36,7 @@ async function getRecordingById(recordingId){
     return Recording.fromDatabaseObject(source, row);
 }
 
-/**
- * @param {Source[]} [sources=null]
- * @param {Recording} [cursor=null] 
- * @param {number} [limit=null] 
- * @param {boolean} [olderDirection=null] 
- * @returns {{Recording[], Recording, Recording}}
- */
-async function getPaginatedRecordings(sources=null, cursor=null, limit=null, olderDirection=true, startDate=null, endDate=null, startTime=null, endTime=null){
-    const DB_DATE_FORMULA = "STRFTIME('%Y-%m-%d', (start_ts-utc_offset)/1000, 'UNIXEPOCH')";
-    const DB_TIME_FORMULA = "STRFTIME('%H-%M', (start_ts-utc_offset)/1000, 'UNIXEPOCH')";
+async function getPaginatedRecordings(sources=null, cursor=null, limit=null, isChrono=true, startTimestamp=null){
     const MAX_LIMIT = 100;
 
     let wheres = [];
@@ -63,56 +54,26 @@ async function getPaginatedRecordings(sources=null, cursor=null, limit=null, old
     }
 
     if (cursor){
-        if (olderDirection){
-            wheres.push(`(start_ts, recording_id) < (?, ?)`);
+        if (isChrono){
+            wheres.push(`(start_ts, recording_id) > (?, ?)`);
         }
         else{
-            wheres.push(`(start_ts, recording_id) > (?, ?)`);
+            wheres.push(`(start_ts, recording_id) < (?, ?)`);
         }
         
         values.push(cursor.startTS);
         values.push(cursor.id);
     }
 
-    if (startDate || endDate){
-        // If a date bound is given, filter using datetime bounds
-
-        if (startDate){
-            // Include start bound
-            wheres.push(`(${DB_DATE_FORMULA},${DB_TIME_FORMULA}) >= (?,?)`);
-
-            values.push(startDate);
-            values.push(startTime || '00-00');  // Assume time is midnight by default
-        }
-
-        if (endDate){
-            // Exclude end bound
-            wheres.push(`(${DB_DATE_FORMULA},${DB_TIME_FORMULA}) < (?,?)`);
-            
-            values.push(endDate);
-            values.push(endTime || '00-00');  // Assume time is midnight by default (same as <= previous date)
-        }
-    }
-    else if (startTime || endTime){
-        // If only time bounds given, filter only using time, ignore date
-        
-        if (startTime){
-            // Include start
-            wheres.push(`${DB_TIME_FORMULA} >= ?`);
-            values.push(startTime);
-        }
-
-        if (endTime){
-            // Exclude end
-            wheres.push(`${DB_TIME_FORMULA} < ?`);
-            values.push(endTime);
-        }
+    if (startTimestamp){
+        wheres.push(`start_ts <= ?`);
+        values.push(startTimestamp);
     }
 
     limit = limit ? Math.min(limit, MAX_LIMIT) : MAX_LIMIT;
     values.push(limit + 1);
 
-    let order = olderDirection ? 'DESC' : 'ASC'
+    let order = isChrono ? 'ASC' : 'DESC';
     let where = wheres.length > 0 ? `WHERE ${wheres.join(' AND ')}` : ''
     let sql = `SELECT * FROM recording ${where} ORDER BY start_ts ${order}, recording_id ${order} LIMIT ?`;
 
@@ -136,15 +97,15 @@ async function getPaginatedRecordings(sources=null, cursor=null, limit=null, old
         return result;
     }
 
-    if (olderDirection){
-        result.recordings = recordings.splice(0, limit);
-        result.hasNewer = cursor != null;                   // Cursor itself implies newer data exists
-        result.hasOlder = rows.length > limit;              // More data in direction exists
-    }
-    else{
+    if (isChrono){
         result.recordings = recordings.splice(0, limit).toReversed();   // SQL ascending, return descending
         result.hasOlder = cursor != null;                               // Cursor itself implies older data exists
         result.hasNewer = rows.length > limit;                          // More data in direction exists
+    }
+    else{
+        result.recordings = recordings.splice(0, limit);
+        result.hasNewer = startTimestamp || cursor != null; // Cursor itself implies newer data exists, or assume data exists if using custom start timestamp
+        result.hasOlder = rows.length > limit;              // More data in direction exists
     }
 
     result.newest = result.recordings[0];

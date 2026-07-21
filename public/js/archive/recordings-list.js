@@ -4,26 +4,45 @@ const LIMIT_PARAM = 'lmt';
 const NEWER_THAN_CURSOR_PARAM = 'ntc';
 const OLDER_THAN_CURSOR_PARAM = 'otc';
 
-const NEWER_THAN_DATE_PARAM = 'ntd';
-const OLDER_THAN_DATE_PARAM = 'otd';
-const NEWER_THAN_TIME_PARAM = 'ntt';
-const OLDER_THAN_TIME_PARAM = 'ott';
+const START_TIMESTAMP_PARAM = 'sts';
 
 const SOURCE_SEPARATOR = '-';
 const SOURCE_ID_ATTR = 'data-id';
 
 const sourceControls = document.querySelector('#source_controls');
 const limitControls = document.querySelector('#limit_controls');
-const startRangeControls = document.querySelector('#range_start_controls');
-const endRangeControls = document.querySelector('#range_end_controls');
+const jumpStartControls = document.querySelector('#jump_ts_controls');
 
 const sourceCheckboxes = sourceControls.querySelectorAll('.source_checkbox');
 const limitSelect = limitControls.querySelector('#limit_select');
+const jumpStartDateInput = jumpStartControls.querySelector('.date_input');
+const jumpStartTimeInput = jumpStartControls.querySelector('.time_input');
 
-const startDateInput = startRangeControls.querySelector('.date_input');
-const startTimeInput = startRangeControls.querySelector('.time_input');
-const endDateInput = endRangeControls.querySelector('.date_input');
-const endTimeInput = endRangeControls.querySelector('.time_input');
+function goOlderThanPage(id){
+    let url = new URL(window.location);
+    let params = url.searchParams;
+
+    if (id >= 0){
+        params.delete(START_TIMESTAMP_PARAM);
+        params.delete(NEWER_THAN_CURSOR_PARAM);
+        params.set(OLDER_THAN_CURSOR_PARAM, id);
+
+        window.location = url;
+    }
+}
+
+function goNewerThanPage(id){
+    let url = new URL(window.location);
+    let params = url.searchParams;
+
+    if (id >= 0){
+        params.delete(START_TIMESTAMP_PARAM);
+        params.delete(OLDER_THAN_CURSOR_PARAM);
+        params.set(NEWER_THAN_CURSOR_PARAM, id);
+
+        window.location = url;
+    }
+}
 
 function goLatestPage(){
     let url = new URL(window.location);
@@ -31,6 +50,7 @@ function goLatestPage(){
 
     params.delete(NEWER_THAN_CURSOR_PARAM);
     params.delete(OLDER_THAN_CURSOR_PARAM);
+    params.delete(START_TIMESTAMP_PARAM);
 
     window.location = url;
 }
@@ -41,6 +61,7 @@ function goOldestPage(){
 
 function loadInitialSourceControls(params){
     let src = params.get(SOURCE_PARAM);
+
     if (src){
         let ids = src.split(SOURCE_SEPARATOR);
 
@@ -66,24 +87,12 @@ function loadInitialLimitControls(params){
     }
 }
 
-function loadInitialRangeControls(params){
-    startDateInput.value = params.get(NEWER_THAN_DATE_PARAM);
-    endDateInput.value = params.get(OLDER_THAN_DATE_PARAM);
-
-    let startTime = params.get(NEWER_THAN_TIME_PARAM);
-    startTimeInput.value = startTime ? startTime.replaceAll('-', ':') : '';
-
-    let endTime = params.get(OLDER_THAN_TIME_PARAM);
-    endTimeInput.value = endTime ? endTime.replaceAll('-', ':') : '';
-}
-
 function loadInitialControlValues(){
     let url = new URL(window.location);
     let params = url.searchParams;
 
     loadInitialSourceControls(params);
     loadInitialLimitControls(params);
-    loadInitialRangeControls(params);
 }
 
 function getSelectedSourceIds(){
@@ -99,6 +108,7 @@ function getSelectedSourceIds(){
 
 function updateSourceParams(params){
     let ids = getSelectedSourceIds();
+
     if (ids.length == 0){
         params.delete(SOURCE_PARAM);
     }
@@ -112,81 +122,59 @@ function updateLimitParams(params){
     params.set(LIMIT_PARAM, lmt);
 }
 
-function updateRangeParams(params){
-    if (startDateInput.value){
-        params.set(NEWER_THAN_DATE_PARAM, startDateInput.value);
-    }
-    else{
-        params.delete(NEWER_THAN_DATE_PARAM);
-    }
-
-    if (endDateInput.value){
-        params.set(OLDER_THAN_DATE_PARAM, endDateInput.value);
-    }
-    else{
-        params.delete(OLDER_THAN_DATE_PARAM);
-    }
-
-    if (startTimeInput.value){
-        params.set(NEWER_THAN_TIME_PARAM, startTimeInput.value.replaceAll(':', '-'));
-    }
-    else{
-        params.delete(NEWER_THAN_TIME_PARAM);
-    }
-
-    if (endTimeInput.value){
-        params.set(OLDER_THAN_TIME_PARAM, endTimeInput.value.replaceAll(':', '-'));
-    }
-    else{
-        params.delete(OLDER_THAN_TIME_PARAM);
-    }
-}
-
 function updateOnFilter(){
     let url = new URL(window.location);
     let params = url.searchParams;
 
-    updateSourceParams(params);    
+    updateSourceParams(params);
     updateLimitParams(params);
-    updateRangeParams(params);
-
-    // params.delete(OLDER_THAN_CURSOR_PARAM);
-    // params.delete(NEWER_THAN_CURSOR_PARAM);
 
     window.location = url;
 }
 
-startDateInput.onchange = () => {
-    if (!startDateInput.value){
-        // If input cleared
-        return;
+function getJumpStartDate(){
+    let dateStr = jumpStartDateInput.value;
+    let timeStr = jumpStartTimeInput.value;
+
+    if (!dateStr){
+        throw new Error('Invalid date!');
     }
 
-    if (!endDateInput.value){
-        // If end not set
-        return;
-    }
+    let [year, month, dom] = dateStr.split('-');
+    let [hours, minutes, seconds, millis] = [23, 59, 59, 999];
 
-    // Make sure end date isn't before start
-    if (endDateInput.value < startDateInput.value){
-        endDateInput.value = startDateInput.value;
+    if (timeStr){
+        let [hr, min, sec] = timeStr.split(':');
+
+        hours = hr ? hr : hours;
+        minutes = min ? min : minutes;
+
+        if (sec){
+            let [s, ms] = sec.split('.');
+            
+            seconds = s ? s : seconds;
+            millis = ms ? ms : millis;
+        }
     }
+        
+    return new Date(year, month-1, dom, hours, minutes, seconds, millis);
 }
 
-endDateInput.onchange = () => {
-    if (!endDateInput.value){
-        // If input cleared
-        return;
-    }
+function updateOnJumpStart(){
+    try {
+        let date = getJumpStartDate();
+        console.log(date);
 
-    if (!startDateInput.value){
-        // If start not set
-        return;
-    }
+        let url = new URL(window.location);
+        let params = url.searchParams;
 
-    // Make sure start is not after end
-    if (startDateInput.value > endDateInput.value){
-        startDateInput.value = endDateInput.value;
+        params.delete(OLDER_THAN_CURSOR_PARAM);
+        params.delete(NEWER_THAN_CURSOR_PARAM);
+        params.set(START_TIMESTAMP_PARAM, Math.floor(date.getTime()));
+
+        window.location = url;
+    } catch (error) {
+        alert(error.message);
     }
 }
 

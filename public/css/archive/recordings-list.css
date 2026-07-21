@@ -3,7 +3,9 @@ main{
     height: 70vh;
 
     display: grid;
+    grid-template-rows: min-content auto;
     grid-template-columns: 1fr auto 1fr;
+
     column-gap: 10px;
 }
 
