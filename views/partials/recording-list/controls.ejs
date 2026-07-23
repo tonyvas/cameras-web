@@ -24,15 +24,14 @@
     <button onclick="updateOnFilter();">Update</button>
 </div>
 
-<div class="control_item" id="jump_ts_controls">
+<div class="control_item" id="jump_date_controls">
     <h3>Jump to</h3>
 
     <form class="date_time_inputs">
-        <input type="date" class="date_input">
-        <input type="time" class="time_input">
+        <input type="date" class="date_input" onchange="updateOnJumpDate()">
 
         <div>
-            <input type="button" value="Jump" onclick="updateOnJumpStart();">
+            <input type="button" value="Jump" onclick="updateOnJumpDate();">
             <input type="reset" value="Reset">
         </div>
     </form>

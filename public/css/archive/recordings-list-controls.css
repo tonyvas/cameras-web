@@ -51,18 +51,18 @@
 /* ### Date controls ### */
 /* ##################### */
 
-#jump_ts_controls, #jump_ts_controls form{
+#jump_date_controls, #jump_date_controls form{
     display: flex;
     flex-direction: column;
     row-gap: 5px;
 }
 
-#jump_ts_controls form div{
+#jump_date_controls form div{
     display: flex;
     justify-content: space-between;
     column-gap: 5px;
 }
 
-#jump_ts_controls form div * {
+#jump_date_controls form div * {
     width: 50%;
 }

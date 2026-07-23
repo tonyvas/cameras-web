@@ -15,12 +15,39 @@
 
     <h1>Recordings</h1>
 
+    <%
+        const MS_PER_DAY = 24*3600*1000;
+
+        let firstRecording = recordings ? recordings[0] : null;
+        let currDate = prevDate = nextDate = null;
+
+        if (firstRecording){
+            currDate = new Date(firstRecording.startTS - firstRecording.utcOffset);
+            currDate.setHours(0);
+            currDate.setMinutes(0);
+            currDate.setSeconds(0);
+            currDate.setMilliseconds(0);
+
+            prevDate = new Date(currDate.getTime() - MS_PER_DAY);
+            nextDate = new Date(currDate.getTime() + MS_PER_DAY);
+        }
+    %>
+
     <main>
         <div id="result_nav">
-            <button class="result_nav_button" title="Newest" onclick="goLatestPage()">&#60;&#60;&#60;</button>
-            <button class="result_nav_button" title="Newer" <%= hasNewer ? '':'disabled' %> onclick="goPrevPage()">&#60;</button>
-            <button class="result_nav_button" title="Older" <%= hasOlder ? '':'disabled' %> onclick="goNextPage()">&#62;</button>
-            <button class="result_nav_button" title="Oldest" onclick="goOldestPage()" disabled>&#62;&#62;&#62;</button>
+            <div id="date_nav">
+                <button class="result_nav_button" title="Next Date" <%= nextDate ? '':'disabled' %> onclick="goNextDate()"><%= nextDate ? nextDate.toLocaleDateString() : 'N/A' %></button>
+                <button class="result_nav_button" title="Current Date" <%= currDate ? '':'disabled' %> onclick="goCurrDate()"><%= currDate ? currDate.toLocaleDateString() : 'N/A' %></button>
+                <button class="result_nav_button" title="Previous Date" <%= prevDate ? '':'disabled' %> onclick="goPrevDate()"><%= prevDate ? prevDate.toLocaleDateString() : 'N/A' %></button>
+            </div>
+
+            <div id="page_nav">
+                <button class="result_nav_button" title="Newest" onclick="goLatestPage()">Newest</button>
+                <button class="result_nav_button" title="Newer" <%= hasNewer ? '':'disabled' %> onclick="goPrevPage()">Newer</button>
+                
+                <button class="result_nav_button" title="Older" <%= hasOlder ? '':'disabled' %> onclick="goNextPage()">Older</button>
+                <button class="result_nav_button" title="Oldest" onclick="goOldestPage()" disabled>Oldest</button>
+            </div>
         </div>
 
         <div id="controls">
@@ -33,14 +60,42 @@
     </main>
 
     <script>
-        function goNextPage(){
-            let id = <%= recordings.length > 0 ? recordings[recordings.length-1].id : -1 %>;
-            goOlderThanPage(id);
+        function goPrevDate(){
+            <% if (prevDate) { %>
+                let year = <%= prevDate.getFullYear() %>
+                let month = <%= prevDate.getMonth() + 1 %>
+                let date = <%= prevDate.getDate() %>
+
+                goDatePage(year, month, date);
+            <% } %>
+        }
+
+        function goCurrDate(){
+            <% if (currDate) { %>
+                let year = <%= currDate.getFullYear() %>
+                let month = <%= currDate.getMonth() + 1 %>
+                let date = <%= currDate.getDate() %>
+
+                goDatePage(year, month, date);
+            <% } %>
+        }
+
+        function goNextDate(){
+            <% if (nextDate) { %>
+                let year = <%= nextDate.getFullYear() %>
+                let month = <%= nextDate.getMonth() + 1 %>
+                let date = <%= nextDate.getDate() %>
+
+                goDatePage(year, month, date);
+            <% } %>
         }
 
         function goPrevPage(){
-            let id = <%= recordings.length > 0 ? recordings[0].id : -1 %>;
-            goNewerThanPage(id);
+            goNewerThanPage(<%= recordings.length > 0 ? recordings[0].id : -1 %>);
+        }
+
+        function goNextPage(){
+            goOlderThanPage(<%= recordings.length > 0 ? recordings[recordings.length-1].id : -1 %>);
         }
     </script>
 

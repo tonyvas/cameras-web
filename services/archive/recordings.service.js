@@ -36,7 +36,7 @@ async function getRecordingById(recordingId){
     return Recording.fromDatabaseObject(source, row);
 }
 
-async function getPaginatedRecordings(sources=null, cursor=null, limit=null, isChrono=true, startTimestamp=null){
+async function getPaginatedRecordings(sources=null, cursor=null, limit=null, isChrono=true, endTimestamp=null){
     const MAX_LIMIT = 100;
 
     let wheres = [];
@@ -65,9 +65,9 @@ async function getPaginatedRecordings(sources=null, cursor=null, limit=null, isC
         values.push(cursor.id);
     }
 
-    if (startTimestamp){
-        wheres.push(`start_ts <= ?`);
-        values.push(startTimestamp);
+    if (endTimestamp){
+        wheres.push(`start_ts < ?`);
+        values.push(endTimestamp);
     }
 
     limit = limit ? Math.min(limit, MAX_LIMIT) : MAX_LIMIT;
@@ -104,7 +104,7 @@ async function getPaginatedRecordings(sources=null, cursor=null, limit=null, isC
     }
     else{
         result.recordings = recordings.splice(0, limit);
-        result.hasNewer = startTimestamp || cursor != null; // Cursor itself implies newer data exists, or assume data exists if using custom start timestamp
+        result.hasNewer = endTimestamp || cursor != null; // Cursor itself implies newer data exists, or assume data exists if using custom end limit
         result.hasOlder = rows.length > limit;              // More data in direction exists
     }
 

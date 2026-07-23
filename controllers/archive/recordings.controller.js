@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
         const limitQuery = req.query.lmt;
         const olderThanCursorQuery = req.query.otc;
         const newerThanCursorQuery = req.query.ntc;
-        const startTimestampQuery = req.query.sts;
+        const endTimestampQuery = req.query.ets;
 
         if (olderThanCursorQuery && newerThanCursorQuery){
             // Allow only a single cursor
@@ -47,9 +47,9 @@ router.get('/', async (req, res, next) => {
             }
         })();
 
-        let startTimestamp = startTimestampQuery ? Number(startTimestampQuery) : null;
+        let endTimestamp = endTimestampQuery ? Number(endTimestampQuery) : null;
         
-        let {recordings, oldest, hasOlder, newest, hasNewer} = await service.getPaginatedRecordings(sources, cursor, limit, isChrono, startTimestamp);
+        let {recordings, oldest, hasOlder, newest, hasNewer} = await service.getPaginatedRecordings(sources, cursor, limit, isChrono, endTimestamp);
         let allSources = await service.getSources();
 
         res.render('archive/recording-list.ejs', {

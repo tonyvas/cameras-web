@@ -4,26 +4,25 @@ const LIMIT_PARAM = 'lmt';
 const NEWER_THAN_CURSOR_PARAM = 'ntc';
 const OLDER_THAN_CURSOR_PARAM = 'otc';
 
-const START_TIMESTAMP_PARAM = 'sts';
+const END_TIMESTAMP_PARAM = 'ets';
 
 const SOURCE_SEPARATOR = '-';
 const SOURCE_ID_ATTR = 'data-id';
 
 const sourceControls = document.querySelector('#source_controls');
 const limitControls = document.querySelector('#limit_controls');
-const jumpStartControls = document.querySelector('#jump_ts_controls');
+const jumpDateControls = document.querySelector('#jump_date_controls');
 
 const sourceCheckboxes = sourceControls.querySelectorAll('.source_checkbox');
 const limitSelect = limitControls.querySelector('#limit_select');
-const jumpStartDateInput = jumpStartControls.querySelector('.date_input');
-const jumpStartTimeInput = jumpStartControls.querySelector('.time_input');
+const jumpDateDateInput = jumpDateControls.querySelector('.date_input');
 
 function goOlderThanPage(id){
     let url = new URL(window.location);
     let params = url.searchParams;
 
     if (id >= 0){
-        params.delete(START_TIMESTAMP_PARAM);
+        params.delete(END_TIMESTAMP_PARAM);
         params.delete(NEWER_THAN_CURSOR_PARAM);
         params.set(OLDER_THAN_CURSOR_PARAM, id);
 
@@ -36,7 +35,7 @@ function goNewerThanPage(id){
     let params = url.searchParams;
 
     if (id >= 0){
-        params.delete(START_TIMESTAMP_PARAM);
+        params.delete(END_TIMESTAMP_PARAM);
         params.delete(OLDER_THAN_CURSOR_PARAM);
         params.set(NEWER_THAN_CURSOR_PARAM, id);
 
@@ -50,13 +49,30 @@ function goLatestPage(){
 
     params.delete(NEWER_THAN_CURSOR_PARAM);
     params.delete(OLDER_THAN_CURSOR_PARAM);
-    params.delete(START_TIMESTAMP_PARAM);
+    params.delete(END_TIMESTAMP_PARAM);
 
     window.location = url;
 }
 
 function goOldestPage(){
     alert('Not implemented yet!');
+}
+
+function goDatePage(year, month, dom){
+    let url = new URL(window.location);
+    let params = url.searchParams;
+
+    let date = new Date(year, month-1, dom);
+
+    // Add 1 day, as end bound is excluded
+    // If requested 2026-11-22, set end bound to 2026-11-23 00:00:00
+    date.setDate(date.getDate() + 1);
+
+    params.delete(OLDER_THAN_CURSOR_PARAM);
+    params.delete(NEWER_THAN_CURSOR_PARAM);
+    params.set(END_TIMESTAMP_PARAM, date.getTime());
+
+    window.location = url;
 }
 
 function loadInitialSourceControls(params){
@@ -87,12 +103,27 @@ function loadInitialLimitControls(params){
     }
 }
 
+function loadInitialJumpDateControls(params){
+    let ets = params.get(END_TIMESTAMP_PARAM);
+    if (ets){
+        let date = new Date(Number(ets));
+        date.setDate(date.getDate() - 1); // End bound is not included. If ets is 2026-11-22 00:00:00, then content is 2026-11-21
+        
+        let year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let dom = date.getDate();
+
+        jumpDateDateInput.value = `${year.toString()}-${month.toString().padStart(2, '0')}-${dom.toString().padStart(2, '0')}`;
+    }
+}
+
 function loadInitialControlValues(){
     let url = new URL(window.location);
     let params = url.searchParams;
 
     loadInitialSourceControls(params);
     loadInitialLimitControls(params);
+    loadInitialJumpDateControls(params);
 }
 
 function getSelectedSourceIds(){
@@ -132,50 +163,15 @@ function updateOnFilter(){
     window.location = url;
 }
 
-function getJumpStartDate(){
-    let dateStr = jumpStartDateInput.value;
-    let timeStr = jumpStartTimeInput.value;
+function updateOnJumpDate(){
+    let dateStr = jumpDateDateInput.value;
 
     if (!dateStr){
-        throw new Error('Invalid date!');
+        return alert('Invalid date!');
     }
 
-    let [year, month, dom] = dateStr.split('-');
-    let [hours, minutes, seconds, millis] = [23, 59, 59, 999];
-
-    if (timeStr){
-        let [hr, min, sec] = timeStr.split(':');
-
-        hours = hr ? hr : hours;
-        minutes = min ? min : minutes;
-
-        if (sec){
-            let [s, ms] = sec.split('.');
-            
-            seconds = s ? s : seconds;
-            millis = ms ? ms : millis;
-        }
-    }
-        
-    return new Date(year, month-1, dom, hours, minutes, seconds, millis);
-}
-
-function updateOnJumpStart(){
-    try {
-        let date = getJumpStartDate();
-        console.log(date);
-
-        let url = new URL(window.location);
-        let params = url.searchParams;
-
-        params.delete(OLDER_THAN_CURSOR_PARAM);
-        params.delete(NEWER_THAN_CURSOR_PARAM);
-        params.set(START_TIMESTAMP_PARAM, Math.floor(date.getTime()));
-
-        window.location = url;
-    } catch (error) {
-        alert(error.message);
-    }
+    let [year, month, date] = dateStr.split('-');
+    goDatePage(year, month, date);
 }
 
 loadInitialControlValues();
