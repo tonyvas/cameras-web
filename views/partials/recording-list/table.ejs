@@ -1,4 +1,4 @@
-<table>
+<table id="recordings_table">
     <colgroup>
         <col id="col_id">
         <col id="col_thumb">
@@ -18,8 +18,25 @@
         </tr>
     </thead>
     <tbody>
+        <% 
+            let currHourGroup = null;
+        %> 
+
         <% for (let recording of recordings) { %> 
-            <tr>
+            <% 
+                let date = new Date(recording.startTS - recording.utcOffset);
+                let hourGroup = Math.floor(date.getTime() / 3600e3);
+            %> 
+
+            <% if (currHourGroup != hourGroup) { %>
+                <% currHourGroup = hourGroup %>
+
+                <tr class="separator_row">
+                    <td colspan="6"><%= formatDate(new Date(hourGroup * 3600e3)) %></td>
+                </tr>
+            <% } %>
+
+            <tr class="video_row">
                 <td>
                     <%= recording.id %>
                 </td>

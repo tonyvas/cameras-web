@@ -1,10 +1,16 @@
-table{
+#recordings_table{
     border: 1px solid black;
     background-color: #333;
     text-align: center;
 }
 
-table th, table td{
+#recordings_table .separator_row td{
+    font-weight: bold;
+    padding: 10px;
+}
+
+#recordings_table th,
+#recordings_table td{
     border: 1px solid black;
 }
 
@@ -36,11 +42,11 @@ table th, table td{
     align-items: center;
 }
 
-.action_button{
+#recordings_table .action_button{
     width: 75%;
 }
 
-.date_div{
+#recordings_table .date_div{
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -49,16 +55,16 @@ table th, table td{
     height: 100%;
 }
 
-.utc_date{
+#recordings_table .utc_date{
     filter: brightness(50%);
 }
 
-.thumb{
+#recordings_table .thumb{
     width: auto;
     max-height: 50px;
 }
 
-.thumb_popup{
+#recordings_table .thumb_popup{
     position: fixed;
     top: 10px;
     right: 10px;
@@ -67,6 +73,6 @@ table th, table td{
     z-index: 10;
 }
 
-.thumb_td:hover .thumb_popup{
+#recordings_table .thumb_td:hover .thumb_popup{
     display: block;
 }
