@@ -7,10 +7,6 @@ class Streamer{
         this._src = 'data-src' in this._video.attributes ? this._video.attributes['data-src'].value : null;
 
         this._setupStreamer();
-
-        setInterval(() => {
-            this.seekToHead();
-        }, 500)
     }
 
     _setupStreamer(){
@@ -25,14 +21,10 @@ class Streamer{
         else{
             this._video.src = this._src;
         }
-
-        //this._video.onplaying = this._video.onseeked = this._video.onseeking = () => {
-        //    this.seekToHead()
-        //}
     }
 
     _setupHls(){
-        this._hls = new Hls();
+        this._hls = new Hls({ maxLiveSyncPlaybackRate: 1.5 });
 
         this._hls.on(Hls.Events.ERROR, (e, data) => {
             if (data.fatal) {
@@ -40,21 +32,20 @@ class Streamer{
                 this._hls = null;
 
                 if (data.details === 'manifestIncompatibleCodecsError') {
-                    console.error(`HLS fatal error: incompatible codec`);
+                    console.error(`[${this._src}] HLS fatal error: incompatible codec`);
                 } else if (data.response && data.response.code === 404) {
-                    console.error(`HLS fatal error: stream unavailable`);
+                    console.error(`[${this._src}] HLS fatal error: stream unavailable`);
                 } else {
-                    console.error(`HLS fatal error: ${data.error}`);
+                    console.error(`[${this._src}] HLS fatal error: ${data.error}`);
                 }
 
                 setTimeout(() => {
                     this._setupHls();
-                    this.play();
                 }, 2000);
             }
-            //else{
-            //    console.error(`HLS error: ${data.error}`);
-            //}
+            // else{
+            //    console.error(`[${this._src}] HLS error: ${data.error}`);
+            // }
         });
 
         this._hls.on(Hls.Events.MEDIA_ATTACHED, () => {
@@ -63,6 +54,15 @@ class Streamer{
                 this._setupBitrateTracker();
             }
         });
+
+        this._hls.on(Hls.Events.MANIFEST_LOADED, () => {
+            this.play();
+        })
+
+        this._video.onplay = () => {
+            // this.seekToHead();
+            this._video.currentTime = this._hls.liveSyncPosition;
+        }
 
         this._hls.attachMedia(this._video);
     }
@@ -101,12 +101,11 @@ class Streamer{
     }
 
     isPlaying(){
-        return !this._video.paused;
+        return this._src && !this._video.paused;
     }
 
     play(){
         this._video.play();
-        this.seekToHead();
     }
 
     pause(){
@@ -115,15 +114,15 @@ class Streamer{
 
     seekToHead(){
         if (!this._video){
-            return
+            return;
         }
 
-        if (this._video.paused){
-            return
+        if (!this.isPlaying()){
+            return;
         }
 
-        if (this._video.duration - this._video.currentTime > 5){
-            this._video.currentTime = this._video.duration;
+        if (this._hls.liveSyncPosition - this._video.currentTime > 5){
+            this._video.currentTime = this._hls.liveSyncPosition;
         }
     }
 
