@@ -4,20 +4,6 @@ const {NotFoundError} = require('../../errors');
 const {Source, Recording} = require('../../models/models');
 const { getSourceById, getSources } = require('./sources.service');
 
-async function getRelatedRecordings(recording){
-    const SQL = 'SELECT recording_id FROM ( SELECT r.recording_id, ROW_NUMBER() OVER ( PARTITION BY source_id ORDER BY ABS((r.start_ts - r.utc_offset) - ?) ) AS rn FROM recording r WHERE r.source_id != ? ) WHERE rn = 1';
-
-    let values = [recording.startTS - recording.utcOffset, recording.source.id];
-    let rows = await db.query(SQL, values);
-
-    let recordings = [];
-    for (let row of rows){
-        recordings.push(await getRecordingById(row['recording_id']));
-    }
-
-    return recordings;
-}
-
 /**
  * @param {number} recordingId 
  * @returns {Recording|null}
@@ -36,82 +22,80 @@ async function getRecordingById(recordingId){
     return Recording.fromDatabaseObject(source, row);
 }
 
-async function getPaginatedRecordings(sources=null, cursor=null, limit=null, isChrono=true, endTimestamp=null){
-    const MAX_LIMIT = 100;
+async function getEndRecordings(sources, latest=true){
+    let conditions = [];
+    let params = [];
 
-    let wheres = [];
-    let values = [];
+    conditions.push(`source_id IN (${sources.map(() => '?').join(',')})`);
+    sources.map(s => params.push(s.id));
 
-    if (sources){
-        let ids = sources.map(s => s.id);
+    let sql = `
+        SELECT * FROM (
+            SELECT
+                *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY source_id
+                    ORDER BY start_ts ${latest ? 'DESC' : 'ASC'}
+                ) AS rn
+            FROM recording
+            WHERE ${conditions.join(' AND ')}
+        )
+        WHERE rn = 1
+    `;
 
-        let q = ids.map(() => '?').join(',');
-        wheres.push(`source_id IN (${q})`);
+    let rows = await db.query(sql, params);
+    return rows.map(row => Recording.fromDatabaseObject(
+        sources.find(s => s.id == row['source_id']),
+        row
+    ));
+}
 
-        for (let id of ids){
-            values.push(id);
-        }
-    }
+async function getNewestRecordings(sources){
+    return await getEndRecordings(sources, true);
+}
 
-    if (cursor){
-        if (isChrono){
-            wheres.push(`(start_ts, recording_id) > (?, ?)`);
-        }
-        else{
-            wheres.push(`(start_ts, recording_id) < (?, ?)`);
-        }
-        
-        values.push(cursor.startTS);
-        values.push(cursor.id);
-    }
+async function getOldestRecordings(sources){
+    return await getEndRecordings(sources, false);
+}
 
-    if (endTimestamp){
-        wheres.push(`start_ts < ?`);
-        values.push(endTimestamp);
-    }
+async function getRecordings(sources, dateKey, startKey, endKey){
+    const DATE_STR_FORMULA = "STRFTIME('%Y%m%d', CAST((start_ts - utc_offset) / 1000 AS INTEGER), 'unixepoch')";
+    const TIME_STR_FORMULA = "STRFTIME('%H%M%S', CAST((start_ts - utc_offset) / 1000 AS INTEGER), 'unixepoch')";
 
-    limit = limit ? Math.min(limit, MAX_LIMIT) : MAX_LIMIT;
-    values.push(limit + 1);
+    let conditions = [];
+    let params = [];
 
-    let order = isChrono ? 'ASC' : 'DESC';
-    let where = wheres.length > 0 ? `WHERE ${wheres.join(' AND ')}` : ''
-    let sql = `SELECT * FROM recording ${where} ORDER BY start_ts ${order}, recording_id ${order} LIMIT ?`;
+    // Sources
+    conditions.push(`source_id IN (${sources.map(() => '?').join(',')})`);
+    sources.map(s => params.push(s.id));
 
-    let allSources = sources || await getSources();
-    let rows = await db.query(sql, values);
-    let recordings = rows.map(row => {
-        for (let source of allSources){
-            if (source.id == row['source_id']){
-                return Recording.fromDatabaseObject(source, row)
-            }
-        }
-    });
+    // Date
+    conditions.push(`date_key = ?`);
+    params.push(dateKey);
 
-    let result = {
-        recordings: [],
-        newest: null, hasNewer: false,
-        oldest: null, hasOlder: false
-    }
+    // Start time
+    conditions.push(`time_key >= ?`);
+    params.push(startKey);
 
-    if (recordings.length == 0){
-        return result;
-    }
+    // End time
+    conditions.push(`time_key < ?`);
+    params.push(endKey);
 
-    if (isChrono){
-        result.recordings = recordings.splice(0, limit).toReversed();   // SQL ascending, return descending
-        result.hasOlder = cursor != null;                               // Cursor itself implies older data exists
-        result.hasNewer = rows.length > limit;                          // More data in direction exists
-    }
-    else{
-        result.recordings = recordings.splice(0, limit);
-        result.hasNewer = endTimestamp || cursor != null; // Cursor itself implies newer data exists, or assume data exists if using custom end limit
-        result.hasOlder = rows.length > limit;              // More data in direction exists
-    }
+    let sql = `
+        SELECT
+            *,
+            ${DATE_STR_FORMULA} AS date_key,
+            ${TIME_STR_FORMULA} AS time_key
+        FROM recording
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY (start_ts-utc_offset) ASC, start_ts ASC
+    `;
 
-    result.newest = result.recordings[0];
-    result.oldest = result.recordings[result.recordings.length-1];
-
-    return result;
+    let rows = await db.query(sql, params);
+    return rows.map(row => Recording.fromDatabaseObject(
+        sources.find(s => s.id == row['source_id']),
+        row
+    ));
 }
 
 async function getRecordingNeighbors(recording){
@@ -128,4 +112,18 @@ async function getRecordingNeighbors(recording){
     return {next, prev};
 }
 
-module.exports = { getSourceById, getSources, getRecordingById, getPaginatedRecordings, getRecordingNeighbors, getRelatedRecordings };
+async function getRelatedRecordings(recording){
+    const SQL = 'SELECT recording_id FROM ( SELECT r.recording_id, ROW_NUMBER() OVER ( PARTITION BY source_id ORDER BY ABS((r.start_ts - r.utc_offset) - ?) ) AS rn FROM recording r WHERE r.source_id != ? ) WHERE rn = 1';
+
+    let values = [recording.startTS - recording.utcOffset, recording.source.id];
+    let rows = await db.query(SQL, values);
+
+    let recordings = [];
+    for (let row of rows){
+        recordings.push(await getRecordingById(row['recording_id']));
+    }
+
+    return recordings;
+}
+
+module.exports = { getRecordingById, getNewestRecordings, getOldestRecordings, getRecordings, getRecordingNeighbors, getRelatedRecordings };

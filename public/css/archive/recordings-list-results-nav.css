@@ -1,0 +1,15 @@
+#result_nav *{
+    text-align: center;
+}
+
+#result_nav .arrow-button{
+    width: 50px;
+}
+
+#result_nav .date-button{
+    width: 100px;
+}
+
+#result_nav select{
+    width: 200px;
+}

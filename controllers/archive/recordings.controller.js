@@ -1,61 +1,113 @@
 const router = require('express').Router()
 
 const {BadRequestError, NotFoundError} = require('../../errors');
-const service = require('../../services/archive/recordings.service');
-const {formatDate, formatTime, formatBitrate, formatSize} = require('../../utils');
+const recordingsService = require('../../services/archive/recordings.service');
+const sourcesService = require('../../services/archive/sources.service');
+
+const utils = require('../../utils');
 
 router.get('/', async (req, res, next) => {
     try {
-        const DEFAULT_LIMIT = 10;
+        const SECOND = 1000;
+        const MINUTE = 60 * SECOND;
+        const HOUR = 60 * MINUTE;
+        const DAY = 24 * HOUR;
 
-        const sourcesQuery = req.query.src;
-        const limitQuery = req.query.lmt;
-        const olderThanCursorQuery = req.query.otc;
-        const newerThanCursorQuery = req.query.ntc;
-        const endTimestampQuery = req.query.ets;
+        const DATE_MACRO_NEWEST = 'newest';
+        const DATE_MACRO_OLDEST = 'oldest';
 
-        if (olderThanCursorQuery && newerThanCursorQuery){
-            // Allow only a single cursor
-            throw new BadRequestError(`Multiple cursors provided, but only one supported!`);
+        const QUERY_KEY_SOURCES = 'src';
+        const QUERY_KEY_MACRO = 'macro';
+        const QUERY_KEY_WINDOW_DATE = 'date';
+        const QUERY_KEY_WINDOW_START = 'start';
+        const QUERY_KEY_WINDOW_DURATION = 'duration';
+
+        const DEFAULT_WINDOW_START = 0;
+        const DEFAULT_WINDOW_DURATION = 3 * HOUR;
+
+        const allSources = await sourcesService.getSources();
+
+        let selectedSources = allSources;
+        let macro = null;
+        let dateKey = DATE_MACRO_NEWEST;
+        let timeStart = DEFAULT_WINDOW_START;
+        let duration = DEFAULT_WINDOW_DURATION;
+
+        // Sources
+        if (req.query[QUERY_KEY_SOURCES]){
+            selectedSources = [];
+
+            for (let id of req.query[QUERY_KEY_SOURCES].split('-')){
+                for (let source of allSources){
+                    if (source.id == id){
+                        selectedSources.push(source);
+                        break;
+                    }
+                }
+            }
         }
 
-        let sources = await (async () => {
-            if (sourcesQuery){
-                // Parse source IDs, and get Sources from database
-                let promises = sourcesQuery.split('-').map(id => service.getSourceById(Number(id.trim())));
-                return await Promise.all(promises);
-            }
-            else{
-                return null;
-            }
-        })();
+        // Window duration
+        if (req.query[QUERY_KEY_WINDOW_DURATION]){
+            duration = utils.parseTimeKey(req.query[QUERY_KEY_WINDOW_DURATION]);
+        }
 
-        let limit = limitQuery ? Number(limitQuery) : DEFAULT_LIMIT;
+        // If macro set, use that
+        if (req.query[QUERY_KEY_MACRO]){
+            macro = req.query[QUERY_KEY_MACRO].toLowerCase();
+        }
+        // If date and time both not set, assume "latest" macro
+        else if (!req.query[QUERY_KEY_WINDOW_DATE] && !req.query[QUERY_KEY_WINDOW_START]){
+            macro = DATE_MACRO_NEWEST;
+        }
+        // Else parse date and time
+        else{
+            // Date
+            if (req.query[QUERY_KEY_WINDOW_DATE]){
+                dateKey = req.query[QUERY_KEY_WINDOW_DATE].toLowerCase();
+            }
 
-        let [isChrono, cursor] = await (async () => {
-            if (newerThanCursorQuery){
-                // Going in chronological order
-                return [true, await service.getRecordingById(newerThanCursorQuery)];
+            // Start time
+            if (req.query[QUERY_KEY_WINDOW_START]){
+                timeStart = utils.parseTimeKey(req.query[QUERY_KEY_WINDOW_START]);
             }
-            else if (olderThanCursorQuery){
-                // Going in reverse chronological order
-                return [false, await service.getRecordingById(olderThanCursorQuery)];
-            }
-            else{
-                // Going in chronological order, but without anchor
-                return [false, null];
-            }
-        })();
+        }
 
-        let endTimestamp = endTimestampQuery ? Number(endTimestampQuery) : null;
+        // If date macro
+        if (macro == DATE_MACRO_NEWEST || macro == DATE_MACRO_OLDEST){
+            let func = macro == DATE_MACRO_NEWEST ? recordingsService.getNewestRecordings : recordingsService.getOldestRecordings;
+            let recordings = await func(selectedSources);
+
+            if (recordings.length == 0){
+                throw new NotFoundError(`Not recordings available for selected sources!`);
+            }
+
+            let recording = recordings[0];
+            dateKey = utils.formatDateKey(new Date(recording.startTS - recording.utcOffset));
+            
+            let time = (recording.startTS - recording.utcOffset) % DAY;
+            timeStart = Math.floor(time / duration) * duration;
+        }
+        // If macro set but unknown, throw error
+        else if (macro != null){
+            throw new BadRequestError(`Invalid macro: ${macro}!`);
+        }
+
+        // Format time into keys
+        let timeStartKey = utils.formatTimeKey(timeStart);
+        let timeEndKey = utils.formatTimeKey(timeStart + duration);
         
-        let {recordings, oldest, hasOlder, newest, hasNewer} = await service.getPaginatedRecordings(sources, cursor, limit, isChrono, endTimestamp);
-        let allSources = await service.getSources();
+        let recordings = await recordingsService.getRecordings(selectedSources, dateKey, timeStartKey, timeEndKey);
 
         res.render('archive/recording-list.ejs', {
-            formatDate, formatTime,
-            sources: allSources,
-            recordings, oldest, hasOlder, newest, hasNewer,
+            data: {
+                sources: allSources,
+                recordings: recordings,
+                dateKey: dateKey,
+                windowStart: timeStart,
+                windowDuration: duration,
+            },
+            utils: utils
         });
     } catch (err) {
         throw err;
@@ -66,11 +118,15 @@ router.get('/:recording_id', async (req, res, next) => {
     try {
         const id = req.params.recording_id;
 
-        let recording = await service.getRecordingById(id);
-        let {next, prev} = await service.getRecordingNeighbors(recording);
-        let related = await service.getRelatedRecordings(recording);
+        let recording = await recordingsService.getRecordingById(id);
+        let {next, prev} = await recordingsService.getRecordingNeighbors(recording);
+        let related = await recordingsService.getRelatedRecordings(recording);
 
-        res.render('archive/recording-details', { recording, next, prev, related, formatDate, formatTime, formatSize, formatBitrate});
+        res.render('archive/recording-details', {
+            data: {
+                recording, next, prev, related
+            }, utils
+        });
     } catch (err) {
         throw err;
     }

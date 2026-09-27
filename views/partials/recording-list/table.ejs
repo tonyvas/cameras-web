@@ -19,20 +19,20 @@
     </thead>
     <tbody>
         <% 
-            let currHourGroup = null;
-        %> 
+            let bucket = null;
+        %>
 
-        <% for (let recording of recordings) { %> 
-            <% 
-                let date = new Date(recording.startTS - recording.utcOffset);
-                let hourGroup = Math.floor(date.getTime() / 3600e3);
-            %> 
+        <% for (let recording of data.recordings.toReversed()) { %>
+            <%
+                let time = (recording.startTS - recording.utcOffset);
+                let currBucket = Math.floor(time / 3600000);
+            %>
 
-            <% if (currHourGroup != hourGroup) { %>
-                <% currHourGroup = hourGroup %>
+            <% if (bucket != currBucket) { %>
+                <% bucket = currBucket; %>
 
                 <tr class="separator_row">
-                    <td colspan="6"><%= formatDate(new Date(hourGroup * 3600e3)) %></td>
+                    <td colspan="6"><%= utils.formatDateTime(new Date(bucket * 3600000)) %></td>
                 </tr>
             <% } %>
 
@@ -55,16 +55,16 @@
                 <td class="date_td">
                     <div class="date_div">
                         <span class="local_date" title="Local Date">
-                            <%= formatDate(new Date(recording.startTS - recording.utcOffset)) %>
+                            <%= utils.formatDateTime(new Date(recording.startTS - recording.utcOffset)) %>
                         </span>
                         <span class="utc_date" title="UTC Date">
-                            <%= formatDate(new Date(recording.startTS)) %>
+                            <%= utils.formatDateTime(new Date(recording.startTS)) %>
                         </span>
                     </div>
                 </td>
 
                 <td>
-                    <%= recording.duration ? formatTime(recording.duration) : '?' %>
+                    <%= recording.duration ? utils.formatSeconds(recording.duration) : '?' %>
                 </td>
 
                 <td>

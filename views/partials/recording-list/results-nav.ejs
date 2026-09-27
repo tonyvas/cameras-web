@@ -1,0 +1,113 @@
+<%
+    const DAY = 24*3600*1000;
+
+    // 8 3-hour windows
+    const OPTION_COUNT = 8;
+    const OPTION_DURATION = DAY / OPTION_COUNT;
+
+    // Dates
+    let currDate = utils.parseDateKey(data.dateKey);
+    if (data.recordings.length > 0){
+        currDate = new Date(data.recordings[0].startTS - data.recordings[0].utcOffset);
+    }
+
+    let prevDate = new Date(currDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+
+    let nextDate = new Date(currDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    // Window dates and times
+    let currWindowTime = data.windowStart;
+
+    let prevWindowTime = (DAY + currWindowTime - OPTION_DURATION) % DAY;
+    let prevWindowDate = prevWindowTime <= currWindowTime ? currDate : prevDate;
+
+    let nextWindowTime = (DAY + currWindowTime + OPTION_DURATION) % DAY;
+    let nextWindowDate = nextWindowTime >= currWindowTime ? currDate : nextDate;
+
+    // Format keys
+    let currDateKey = utils.formatDateKey(currDate);
+    let prevDateKey = utils.formatDateKey(prevDate);
+    let nextDateKey = utils.formatDateKey(nextDate);
+
+    let prevWindowDateKey = utils.formatDateKey(prevWindowDate);
+    let nextWindowDateKey = utils.formatDateKey(nextWindowDate);
+
+    let currWindowTimeKey = utils.formatTimeKey(currWindowTime);
+    let prevWindowTimeKey = utils.formatTimeKey(prevWindowTime);
+    let nextWindowTimeKey = utils.formatTimeKey(nextWindowTime);
+
+    let currDurationKey = utils.formatTimeKey(data.windowDuration);
+    let optDurationKey = utils.formatTimeKey(OPTION_DURATION);
+%>
+
+<!-- Oldest button -->
+<button
+    class="arrow-button"
+    title="Oldest"
+    onclick="goOldestPage('<%= currDurationKey %>')">
+    &lt;&lt;&lt;
+</button>
+
+<!-- Previous date button -->
+<button
+    class="date-button"
+    title="Previous Date"
+    onclick="goWindowPage('<%= prevDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
+    <%= utils.formatDate(prevDate) %>
+</button>
+
+<!-- Previous window button -->
+<button
+    class="arrow-button"
+    title="Older"
+    onclick="goWindowPage('<%= prevWindowDateKey %>', '<%= prevWindowTimeKey %>', '<%= currDurationKey %>')">
+    &lt;
+</button>
+
+<!-- Window select -->
+<select id="window_select" autocomplete="off" onchange="onSelectChange(this.selectedOptions[0]);">
+    <% for (let i = 0; i < OPTION_COUNT; i++){ %>
+        <%
+            let start = i * OPTION_DURATION;
+            let end = (i+1) * OPTION_DURATION;
+        %>
+
+        <option
+            value="<%= currDateKey %>,<%= utils.formatTimeKey(start) %>,<%= optDurationKey %>"
+            <%= start == data.windowStart ? 'selected' : '' %>>
+            <%= utils.formatSeconds(start/1000, false) %> - <%= utils.formatSeconds(end/1000 - 1, false) %>
+        </option>
+    <% } %>
+</select>
+
+<!-- Next window button -->
+<button
+    class="arrow-button"
+    title="Newer"
+    onclick="goWindowPage('<%= nextWindowDateKey %>', '<%= nextWindowTimeKey %>', '<%= currDurationKey %>')">
+    &gt;
+</button>
+
+<!-- Next date button -->
+<button
+    class="date-button"
+    title="Next Date"
+    onclick="goWindowPage('<%= nextDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
+    <%= utils.formatDate(nextDate) %>
+</button>
+
+<!-- Newest button -->
+<button
+    class="arrow-button"
+    title="Newest"
+    onclick="goNewestPage('<%= currDurationKey %>')">
+    &gt;&gt;&gt;
+</button>
+
+<script>
+    function onSelectChange(option){
+        goWindowPage(...option.value.split(','));
+    }
+</script>

@@ -11,14 +11,14 @@
 <body>
     <%- include('../partials/header', {active: null}) -%> 
 
-    <h1>Recording <%= recording.id %></h1>
+    <h1>Recording <%= data.recording.id %></h1>
 
     <main>
         <div id="media_container">
-            <video src="/archive/media/videos/<%= recording.id %>" alt="<%= recording.id %> video" controls autoplay muted></video>
+            <video src="/archive/media/videos/<%= data.recording.id %>" alt="<%= data.recording.id %> video" controls autoplay muted></video>
 
             <div id="controls">
-                <button <%= prev ? '':'disabled' %> onclick="gotoRecording(<%= prev ? prev.id : -1 %>)">&#60;</button>
+                <button <%= data.prev ? '':'disabled' %> onclick="gotoRecording(<%= data.prev ? data.prev.id : -1 %>)">&#60;</button>
                 
                 <select id="speed_select">
                     <option value="1">1x</option>
@@ -29,7 +29,7 @@
                     <option value="32">32x</option>
                 </select>
 
-                <button <%= next ? '':'disabled' %> onclick="gotoRecording(<%= next ? next.id : -1 %>)">&#62;</button>
+                <button <%= data.next ? '':'disabled' %> onclick="gotoRecording(<%= data.next ? data.next.id : -1 %>)">&#62;</button>
             </div>
         </div>
         <div id="info_container">
@@ -56,32 +56,32 @@
                 <tbody>
                     <tr>
                         <td>
-                            <%= recording.source.name %>
+                            <%= data.recording.source.name %>
                         </td>
 
                         <td class="recording_info_dates">
                             <span class="local_date" title="Local Date">
-                                <%= formatDate(new Date(recording.startTS - recording.utcOffset)) %>
+                                <%= utils.formatDateTime(new Date(data.recording.startTS - data.recording.utcOffset)) %>
                             </span>
                             <span class="utc_date" title="UTC Date">
-                                <%= formatDate(new Date(recording.startTS)) %>
+                                <%= utils.formatDateTime(new Date(data.recording.startTS)) %>
                             </span>
                         </td>
 
                         <td>
-                            <%= recording.duration ? formatTime(recording.duration) : '?' %>
+                            <%= data.recording.duration ? utils.formatSeconds(data.recording.duration) : '?' %>
                         </td>
 
                         <td>
-                            <%= recording.size ? formatSize(recording.size) : '?' %>
+                            <%= data.recording.size ? utils.formatSize(data.recording.size) : '?' %>
                         </td>
 
                         <td>
-                            <%= recording.bitrate ? formatBitrate(recording.bitrate) : '?' %>
+                            <%= data.recording.bitrate ? utils.formatBitrate(data.recording.bitrate) : '?' %>
                         </td>
 
                         <td>
-                            <%= recording.audioCodec %> / <%= recording.videoCodec %>
+                            <%= data.recording.audioCodec %> / <%= data.recording.videoCodec %>
                         </td>
                     </tr>
                 </tbody>
@@ -102,17 +102,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% for( let r of related ) { %>
+                    <% for( let r of data.related ) { %>
                         <tr>
                             <td>
                                 <%= r.source.name %>
                             </td>
                             <td class="recording_info_dates">
                                 <span class="local_date" title="Local Date">
-                                    <%= formatDate(new Date(r.startTS - r.utcOffset)) %>
+                                    <%= utils.formatDateTime(new Date(r.startTS - r.utcOffset)) %>
                                 </span>
                                 <span class="utc_date" title="UTC Date">
-                                    <%= formatDate(new Date(r.startTS)) %>
+                                    <%= utils.formatDateTime(new Date(r.startTS)) %>
                                 </span>
                             </td>
                             <td>

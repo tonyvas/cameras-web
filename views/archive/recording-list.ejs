@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/public/css/common.css">
     <link rel="stylesheet" href="/public/css/archive/recordings-list.css">
+    <link rel="stylesheet" href="/public/css/archive/recordings-list-results-nav.css">
     <link rel="stylesheet" href="/public/css/archive/recordings-list-controls.css">
     <link rel="stylesheet" href="/public/css/archive/recordings-list-table.css">
 
@@ -13,41 +14,22 @@
 <body>
     <%- include('../partials/header', {active: '/archive/recordings'}) -%> 
 
-    <h1>Recordings</h1>
+    <hgroup>
+        <h1><%= data.recordings.length %> <%= data.recordings.length == 1 ? 'Recording' : 'Recordings' %></h1>
 
-    <%
-        const MS_PER_DAY = 24*3600*1000;
+        <h2>
+            <%= utils.formatDate(utils.parseDateKey(data.dateKey)) %>
+            <br>
+            <%= utils.formatSeconds(data.windowStart/1000, false) %>
+             - 
+            <%= utils.formatSeconds((data.windowStart + data.windowDuration-1)/1000, false) %>
+        </h2>
+    </hgroup>
 
-        let firstRecording = recordings ? recordings[0] : null;
-        let currDate = prevDate = nextDate = null;
-
-        if (firstRecording){
-            currDate = new Date(firstRecording.startTS - firstRecording.utcOffset);
-            currDate.setHours(0);
-            currDate.setMinutes(0);
-            currDate.setSeconds(0);
-            currDate.setMilliseconds(0);
-
-            prevDate = new Date(currDate.getTime() - MS_PER_DAY);
-            nextDate = new Date(currDate.getTime() + MS_PER_DAY);
-        }
-    %>
 
     <main>
         <div id="result_nav">
-            <div id="date_nav">
-                <button class="result_nav_button" title="Next Date" <%= nextDate ? '':'disabled' %> onclick="goNextDate()"><%= nextDate ? nextDate.toLocaleDateString() : 'N/A' %></button>
-                <button class="result_nav_button" title="Current Date" <%= currDate ? '':'disabled' %> onclick="goCurrDate()"><%= currDate ? currDate.toLocaleDateString() : 'N/A' %></button>
-                <button class="result_nav_button" title="Previous Date" <%= prevDate ? '':'disabled' %> onclick="goPrevDate()"><%= prevDate ? prevDate.toLocaleDateString() : 'N/A' %></button>
-            </div>
-
-            <div id="page_nav">
-                <button class="result_nav_button" title="Newest" onclick="goLatestPage()">Newest</button>
-                <button class="result_nav_button" title="Newer" <%= hasNewer ? '':'disabled' %> onclick="goPrevPage()">Newer</button>
-                
-                <button class="result_nav_button" title="Older" <%= hasOlder ? '':'disabled' %> onclick="goNextPage()">Older</button>
-                <button class="result_nav_button" title="Oldest" onclick="goOldestPage()" disabled>Oldest</button>
-            </div>
+            <%- include('../partials/recording-list/results-nav') -%>
         </div>
 
         <div id="controls">
@@ -58,46 +40,6 @@
             <%- include('../partials/recording-list/table') -%>
         </div>
     </main>
-
-    <script>
-        function goPrevDate(){
-            <% if (prevDate) { %>
-                let year = <%= prevDate.getFullYear() %>
-                let month = <%= prevDate.getMonth() + 1 %>
-                let date = <%= prevDate.getDate() %>
-
-                goDatePage(year, month, date);
-            <% } %>
-        }
-
-        function goCurrDate(){
-            <% if (currDate) { %>
-                let year = <%= currDate.getFullYear() %>
-                let month = <%= currDate.getMonth() + 1 %>
-                let date = <%= currDate.getDate() %>
-
-                goDatePage(year, month, date);
-            <% } %>
-        }
-
-        function goNextDate(){
-            <% if (nextDate) { %>
-                let year = <%= nextDate.getFullYear() %>
-                let month = <%= nextDate.getMonth() + 1 %>
-                let date = <%= nextDate.getDate() %>
-
-                goDatePage(year, month, date);
-            <% } %>
-        }
-
-        function goPrevPage(){
-            goNewerThanPage(<%= recordings.length > 0 ? recordings[0].id : -1 %>);
-        }
-
-        function goNextPage(){
-            goOlderThanPage(<%= recordings.length > 0 ? recordings[recordings.length-1].id : -1 %>);
-        }
-    </script>
 
     <script src="/public/js/archive/recordings-list.js"></script>
 </body>

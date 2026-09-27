@@ -50,35 +50,57 @@ function padNumber(num, digits){
     return num.toString().padStart(digits, '0');
 }
 
-function formatDate(date){
-    let year = padNumber(date.getUTCFullYear(), 4);
-    let month = padNumber(date.getUTCMonth()+1, 2);
-    let day = padNumber(date.getUTCDate(), 2);
-    let hours = padNumber(date.getUTCHours(), 2);
-    let minutes = padNumber(date.getUTCMinutes(), 2);
-    let seconds = padNumber(date.getUTCSeconds(), 2);
+function formatSeconds(seconds, brief=true){
+    let s = Math.floor(seconds);
 
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
-function formatTime(seconds){
-    let h = Math.floor(seconds / 3600);
-    seconds %= 3600;
-
-    let m = Math.floor(seconds / 60);
-    seconds %= 60;
+    let h = Math.floor(s / 3600);
+    s %= 3600;
     
-    let s = Math.round(seconds);
+    let m = Math.floor(s / 60);
+    s %= 60;
 
     let parts = [];
-
-    if (h > 0){
+    if (h > 0 || !brief){
         parts.push(h);
     }
+
     parts.push(m);
     parts.push(s);
 
     return parts.map(p => padNumber(p, 2)).join(':');
+}
+
+function formatDate(date){
+    let year = padNumber(date.getUTCFullYear(), 4);
+    let month = padNumber(date.getUTCMonth()+1, 2);
+    let day = padNumber(date.getUTCDate(), 2);
+
+    return `${year}-${month}-${day}`;
+}
+
+function formatTime(date){
+    let hours = padNumber(date.getUTCHours(), 2);
+    let minutes = padNumber(date.getUTCMinutes(), 2);
+    let seconds = padNumber(date.getUTCSeconds(), 2);
+
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+function formatDateTime(date){
+    return `${formatDate(date)} ${formatTime(date)}`;
+}
+
+function formatDateRange(startDate, endDate){
+    let sameYear = startDate.getUTCFullYear() == endDate.getUTCFullYear();
+    let sameMonth = startDate.getUTCMonth() == endDate.getUTCMonth();
+    let sameDay = startDate.getUTCDate() == endDate.getUTCDate();
+
+    if (sameYear && sameMonth && sameDay){
+        return `${formatDateTime(startDate)} - ${formatTime(endDate)}`;
+    }
+    else{
+        return `${formatDateTime(startDate)} - ${formatDateTime(endDate)}`;
+    }
 }
 
 function formatBitrate(bitrate){
@@ -108,4 +130,48 @@ function formatSize(size){
     }
 }
 
-module.exports = { execChildProcess, mkdir, generateThumbnail, getMetadata, padNumber, round, formatDate, formatTime, formatBitrate, formatSize };
+function formatDateKey(date){
+    let year = date.getUTCFullYear().toString().padStart(4, '0');
+    let month = (date.getUTCMonth()+1).toString().padStart(2, '0');
+    let day = date.getUTCDate().toString().padStart(2, '0');
+
+    return [year, month, day].join('');
+}
+
+function parseDateKey(key){
+    let year = Number(key.substring(0, 4));
+    let month = Number(key.substring(4, 6));
+    let day = Number(key.substring(6, 8));
+
+    return new Date(year, month-1, day);
+}
+
+function formatTimeKey(ms){
+    let seconds = Math.floor(ms/1000);
+    
+    let hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+
+    let minutes = Math.floor(seconds / 60);
+    seconds %= 60;
+
+    return [hours, minutes, seconds].map(v => v.toString().padStart(2, '0')).join('');
+}
+
+function parseTimeKey(key){
+    let hours = Number(key.substring(0, 2));
+    let minutes = Number(key.substring(2, 4));
+
+    let seconds = key.length > 4 ? Number(key.substring(4, 6)) : 0;
+
+    return (hours * 3600 + minutes * 60 + seconds) * 1000;
+}
+
+module.exports = {
+    execChildProcess, mkdir,
+    generateThumbnail, getMetadata,
+    padNumber, round,
+    formatSeconds, formatDate, formatTime, formatDateTime, formatDateRange,
+    formatBitrate, formatSize,
+    formatDateKey, formatTimeKey, parseDateKey, parseTimeKey
+};
