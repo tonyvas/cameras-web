@@ -29,7 +29,7 @@ router.get('/', async (req, res, next) => {
 
         let selectedSources = allSources;
         let macro = null;
-        let dateKey = DATE_MACRO_NEWEST;
+        let dateKey = null;
         let timeStart = DEFAULT_WINDOW_START;
         let duration = DEFAULT_WINDOW_DURATION;
 
@@ -56,20 +56,20 @@ router.get('/', async (req, res, next) => {
         if (req.query[QUERY_KEY_MACRO]){
             macro = req.query[QUERY_KEY_MACRO].toLowerCase();
         }
-        // If date and time both not set, assume "latest" macro
-        else if (!req.query[QUERY_KEY_WINDOW_DATE] && !req.query[QUERY_KEY_WINDOW_START]){
-            macro = DATE_MACRO_NEWEST;
-        }
         // Else parse date and time
         else{
-            // Date
+            // If date set, use that
             if (req.query[QUERY_KEY_WINDOW_DATE]){
                 dateKey = req.query[QUERY_KEY_WINDOW_DATE].toLowerCase();
-            }
 
-            // Start time
-            if (req.query[QUERY_KEY_WINDOW_START]){
-                timeStart = utils.parseTimeKey(req.query[QUERY_KEY_WINDOW_START]);
+                // Start time
+                if (req.query[QUERY_KEY_WINDOW_START]){
+                    timeStart = utils.parseTimeKey(req.query[QUERY_KEY_WINDOW_START]);
+                }
+            }
+            // Else assume latest
+            else{
+                macro = DATE_MACRO_NEWEST;
             }
         }
 
@@ -78,22 +78,29 @@ router.get('/', async (req, res, next) => {
             let func = macro == DATE_MACRO_NEWEST ? recordingsService.getNewestRecordings : recordingsService.getOldestRecordings;
             let recordings = await func(selectedSources);
 
-            let recording = recordings[0];
-            dateKey = utils.formatDateKey(new Date(recording.startTS - recording.utcOffset));
-            
-            let time = (recording.startTS - recording.utcOffset) % DAY;
-            timeStart = Math.floor(time / duration) * duration;
+            if (recordings.length > 0){
+                let recording = recordings[0];
+                dateKey = utils.formatDateKey(new Date(recording.startTS - recording.utcOffset));
+                
+                let time = (recording.startTS - recording.utcOffset) % DAY;
+                timeStart = Math.floor(time / duration) * duration;
+            }
         }
         // If macro set but unknown, throw error
         else if (macro != null){
             throw new BadRequestError(`Invalid macro: ${macro}!`);
         }
 
-        // Format time into keys
-        let timeStartKey = utils.formatTimeKey(timeStart);
-        let timeEndKey = utils.formatTimeKey(timeStart + duration);
-        
-        let recordings = await recordingsService.getRecordings(selectedSources, dateKey, timeStartKey, timeEndKey);
+        let recordings = [];
+
+        // If date key is available, fetch recordings
+        if (dateKey){
+            // Format time into keys
+            let timeStartKey = utils.formatTimeKey(timeStart);
+            let timeEndKey = utils.formatTimeKey(timeStart + duration);
+            
+            recordings = await recordingsService.getRecordings(selectedSources, dateKey, timeStartKey, timeEndKey);
+        }
 
         res.render('archive/recording-list.ejs', {
             data: {

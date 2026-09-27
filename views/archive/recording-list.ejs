@@ -16,14 +16,16 @@
 
     <hgroup>
         <h1><%= data.recordings.length %> <%= data.recordings.length == 1 ? 'Recording' : 'Recordings' %></h1>
-
-        <h2>
-            <%= utils.formatDate(utils.parseDateKey(data.dateKey)) %>
-            <br>
-            <%= utils.formatSeconds(data.windowStart/1000, false) %>
-             - 
-            <%= utils.formatSeconds((data.windowStart + data.windowDuration-1)/1000, false) %>
-        </h2>
+        
+        <% if (data.dateKey) { %>
+            <h2>
+                <%= utils.formatDate(utils.parseDateKey(data.dateKey)) %>
+                <br>
+                <%= utils.formatSeconds(data.windowStart/1000, false) %>
+                - 
+                <%= utils.formatSeconds((data.windowStart + data.windowDuration-1)/1000, false) %>
+            </h2>
+        <% } %>
     </hgroup>
 
 

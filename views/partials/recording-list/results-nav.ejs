@@ -6,16 +6,24 @@
     const OPTION_DURATION = DAY / OPTION_COUNT;
 
     // Dates
-    let currDate = utils.parseDateKey(data.dateKey);
+    let currDate = prevDate = nextDate = null;
+
+    // Try get current date if possible
     if (data.recordings.length > 0){
         currDate = new Date(data.recordings[0].startTS - data.recordings[0].utcOffset);
     }
+    else if (data.dateKey){
+        currDate = utils.parseDateKey(data.dateKey)
+    }
 
-    let prevDate = new Date(currDate);
-    prevDate.setDate(prevDate.getDate() - 1);
-
-    let nextDate = new Date(currDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    // If got current date, get next and previous dates too
+    if (currDate){
+        prevDate = new Date(currDate);
+        prevDate.setDate(prevDate.getDate() - 1);
+        
+        nextDate = new Date(currDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+    }
 
     // Window dates and times
     let currWindowTime = data.windowStart;
@@ -27,12 +35,17 @@
     let nextWindowDate = nextWindowTime >= currWindowTime ? currDate : nextDate;
 
     // Format keys
-    let currDateKey = utils.formatDateKey(currDate);
-    let prevDateKey = utils.formatDateKey(prevDate);
-    let nextDateKey = utils.formatDateKey(nextDate);
+    let currDateKey = prevDateKey = nextDateKey = prevWindowDateKey = nextWindowDateKey = null;
 
-    let prevWindowDateKey = utils.formatDateKey(prevWindowDate);
-    let nextWindowDateKey = utils.formatDateKey(nextWindowDate);
+    // If dates are valid, format keys
+    if (currDate){
+        currDateKey = utils.formatDateKey(currDate);
+        prevDateKey = utils.formatDateKey(prevDate);
+        nextDateKey = utils.formatDateKey(nextDate);
+    
+        prevWindowDateKey = utils.formatDateKey(prevWindowDate);
+        nextWindowDateKey = utils.formatDateKey(nextWindowDate);
+    }
 
     let currWindowTimeKey = utils.formatTimeKey(currWindowTime);
     let prevWindowTimeKey = utils.formatTimeKey(prevWindowTime);
@@ -51,23 +64,44 @@
 </button>
 
 <!-- Previous date button -->
-<button
-    class="date-button"
-    title="Previous Date"
-    onclick="goWindowPage('<%= prevDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
-    <%= utils.formatDate(prevDate) %>
-</button>
+<% if (prevDate) { %>
+    <button
+        class="date-button"
+        title="Previous Date"
+        onclick="goWindowPage('<%= prevDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
+        <%= utils.formatDate(prevDate) %>
+    </button>
+<% } else { %>
+    <button class="date-button" title="Previous Date" disabled>???</button>
+<% } %>
 
 <!-- Previous window button -->
-<button
-    class="arrow-button"
-    title="Older"
-    onclick="goWindowPage('<%= prevWindowDateKey %>', '<%= prevWindowTimeKey %>', '<%= currDurationKey %>')">
-    &lt;
-</button>
+<% if (prevDate) { %>
+    <button
+        class="arrow-button"
+        title="Older"
+        onclick="goWindowPage('<%= prevWindowDateKey %>', '<%= prevWindowTimeKey %>', '<%= currDurationKey %>')">
+        &lt;
+    </button>
+<% } else { %>
+    <button class="arrow-button" title="Older" disabled>&lt;</button>
+<% } %>
 
 <!-- Window select -->
-<select id="window_select" autocomplete="off" onchange="onSelectChange(this.selectedOptions[0]);">
+<% if (prevDate) { %>
+    
+<% } else { %>
+    
+<% } %>
+<select
+    id="window_select"
+    autocomplete="off"
+    <% if (currDate) { %>
+        onchange="onSelectChange(this.selectedOptions[0]);"
+    <% } else { %>
+        disabled
+    <% } %>
+>
     <% for (let i = 0; i < OPTION_COUNT; i++){ %>
         <%
             let start = i * OPTION_DURATION;
@@ -75,7 +109,7 @@
         %>
 
         <option
-            value="<%= currDateKey %>,<%= utils.formatTimeKey(start) %>,<%= optDurationKey %>"
+            <% if (currDate) { %> value="<%= currDateKey %>,<%= utils.formatTimeKey(start) %>,<%= optDurationKey %>" <% } %>
             <%= start == data.windowStart ? 'selected' : '' %>>
             <%= utils.formatSeconds(start/1000, false) %> - <%= utils.formatSeconds(end/1000 - 1, false) %>
         </option>
@@ -83,20 +117,28 @@
 </select>
 
 <!-- Next window button -->
-<button
-    class="arrow-button"
-    title="Newer"
-    onclick="goWindowPage('<%= nextWindowDateKey %>', '<%= nextWindowTimeKey %>', '<%= currDurationKey %>')">
-    &gt;
-</button>
+<% if (prevDate) { %>
+    <button
+        class="arrow-button"
+        title="Newer"
+        onclick="goWindowPage('<%= nextWindowDateKey %>', '<%= nextWindowTimeKey %>', '<%= currDurationKey %>')">
+        &gt;
+    </button>
+<% } else { %>
+    <button class="arrow-button" title="Newer" disabled>&gt;</button>
+<% } %>
 
 <!-- Next date button -->
-<button
-    class="date-button"
-    title="Next Date"
-    onclick="goWindowPage('<%= nextDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
-    <%= utils.formatDate(nextDate) %>
-</button>
+<% if (prevDate) { %>
+    <button
+        class="date-button"
+        title="Next Date"
+        onclick="goWindowPage('<%= nextDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
+        <%= utils.formatDate(nextDate) %>
+    </button>
+<% } else { %>
+    <button class="date-button" title="Next Date" disabled>???</button>
+<% } %>
 
 <!-- Newest button -->
 <button
