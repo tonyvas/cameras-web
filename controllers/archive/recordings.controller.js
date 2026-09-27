@@ -78,10 +78,6 @@ router.get('/', async (req, res, next) => {
             let func = macro == DATE_MACRO_NEWEST ? recordingsService.getNewestRecordings : recordingsService.getOldestRecordings;
             let recordings = await func(selectedSources);
 
-            if (recordings.length == 0){
-                throw new NotFoundError(`Not recordings available for selected sources!`);
-            }
-
             let recording = recordings[0];
             dateKey = utils.formatDateKey(new Date(recording.startTS - recording.utcOffset));
             
