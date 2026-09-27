@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/public/css/common.css">
     <link rel="stylesheet" href="/public/css/archive/recording-details.css">
 
-    <title>Recording <%= recording.id %></title>
+    <title>Recording <%= data.recording.id %></title>
 </head>
 <body>
     <%- include('../partials/header', {active: null}) -%> 
@@ -81,7 +81,7 @@
                         </td>
 
                         <td>
-                            <%= data.recording.audioCodec %> / <%= data.recording.videoCodec %>
+                            <%= data.recording.audioCodec || '?' %> / <%= data.recording.videoCodec || '?' %>
                         </td>
                     </tr>
                 </tbody>
