@@ -41,4 +41,27 @@ async function getSourceRecordingCount(source){
     return rows[0]['count'];
 }
 
-module.exports = { getSourceById, getSources, getSourceRecordingCount };
+async function getSourceRecordingCountsByDate(source){
+    const DATE_STR_FORMULA = "STRFTIME('%Y%m%d', CAST((start_ts - utc_offset) / 1000 AS INTEGER), 'unixepoch')";
+
+    const SQL = `
+        SELECT
+            ${DATE_STR_FORMULA} AS date_key,
+            COUNT(recording_id) as count
+        FROM recording
+        WHERE source_id = ?
+        GROUP BY date_key
+        ORDER BY (start_ts-utc_offset) ASC, start_ts ASC
+    `;
+
+    let rows = await db.query(SQL, [source.id]);
+    
+    let counts = {};
+    for (let row of rows){
+        counts[row['date_key']] = row['count'];
+    }
+
+    return counts;
+}
+
+module.exports = { getSourceById, getSources, getSourceRecordingCount, getSourceRecordingCountsByDate };

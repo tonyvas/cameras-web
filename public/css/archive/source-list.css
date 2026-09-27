@@ -4,25 +4,23 @@ table{
 }
 
 table th, table td{
+    box-sizing: border-box;
+    padding-left: 5px;
+    padding-right: 5px;
+
     border: 1px solid black;
 }
 
-#col_id{
-    width: 75px;
+table col{
+    min-width: 100px;
 }
 
-#col_name{
-    width: 275px;
+main table a{
+    color: white;
+    text-decoration: none;
 }
 
-#col_count{
-    width: 150px;
-}
-
-#col_actions{
-    width: 100px;
-}
-
-.action_button{
-    width: 100%;
+main table a:hover{
+    color: white;
+    text-decoration: underline;
 }
