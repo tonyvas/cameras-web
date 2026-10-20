@@ -58,6 +58,7 @@
 <!-- Oldest button -->
 <button
     class="arrow-button"
+    id="oldest_button"
     title="Oldest"
     onclick="goOldestPage('<%= currDurationKey %>')">
     &lt;&lt;&lt;
@@ -67,32 +68,28 @@
 <% if (prevDate) { %>
     <button
         class="date-button"
+        id="prev_date_button"
         title="Previous Date"
         onclick="goWindowPage('<%= prevDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
         <%= utils.formatDate(prevDate) %>
     </button>
 <% } else { %>
-    <button class="date-button" title="Previous Date" disabled>???</button>
+    <button class="date-button" id="prev_date_button" title="Previous Date" disabled>???</button>
 <% } %>
 
 <!-- Previous window button -->
 <% if (prevDate) { %>
     <button
         class="arrow-button"
+        id="older_button"
         title="Older"
         onclick="goWindowPage('<%= prevWindowDateKey %>', '<%= prevWindowTimeKey %>', '<%= currDurationKey %>')">
         &lt;
     </button>
 <% } else { %>
-    <button class="arrow-button" title="Older" disabled>&lt;</button>
+    <button class="arrow-button" id="older_button" title="Older" disabled>&lt;</button>
 <% } %>
 
-<!-- Window select -->
-<% if (prevDate) { %>
-    
-<% } else { %>
-    
-<% } %>
 <select
     id="window_select"
     autocomplete="off"
@@ -120,29 +117,32 @@
 <% if (prevDate) { %>
     <button
         class="arrow-button"
+        id="newer_button"
         title="Newer"
         onclick="goWindowPage('<%= nextWindowDateKey %>', '<%= nextWindowTimeKey %>', '<%= currDurationKey %>')">
         &gt;
     </button>
 <% } else { %>
-    <button class="arrow-button" title="Newer" disabled>&gt;</button>
+    <button class="arrow-button" id="newer_button" title="Newer" disabled>&gt;</button>
 <% } %>
 
 <!-- Next date button -->
 <% if (prevDate) { %>
     <button
         class="date-button"
+        id="next_date_button"
         title="Next Date"
         onclick="goWindowPage('<%= nextDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
         <%= utils.formatDate(nextDate) %>
     </button>
 <% } else { %>
-    <button class="date-button" title="Next Date" disabled>???</button>
+    <button class="date-button" id="next_date_button" title="Next Date" disabled>???</button>
 <% } %>
 
 <!-- Newest button -->
 <button
     class="arrow-button"
+    id="newest_button"
     title="Newest"
     onclick="goNewestPage('<%= currDurationKey %>')">
     &gt;&gt;&gt;

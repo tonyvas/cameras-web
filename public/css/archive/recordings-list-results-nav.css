@@ -1,15 +1,133 @@
+#result_nav{
+    width: 100%;
+    gap: 10px;
+}
+
 #result_nav *{
     text-align: center;
+    margin: 0;
+    padding: 0;
 }
 
 #result_nav .arrow-button{
-    width: 50px;
+    min-width: 50px;
 }
 
 #result_nav .date-button{
-    width: 100px;
+    min-width: 100px;
 }
 
-#result_nav select{
-    width: 200px;
+#result_nav #window_select{
+    min-width: 200px;
+}
+
+@media (max-width: 399px){
+    #result_nav{
+        display: grid;
+        grid-template-rows: 1fr 1fr 1fr;
+        grid-template-columns: 1fr auto auto 1fr;
+    }
+
+    #result_nav *{
+        width: 100%;
+    }
+
+    #result_nav #oldest_button{
+        grid-row: 1;
+        grid-column-start: 1;
+        grid-column-end: 3;
+    }
+
+    #result_nav #newest_button{
+        grid-row: 1;
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+    #result_nav #prev_date_button{
+        grid-row: 2;
+        grid-column-start: 1;
+        grid-column-end: 3;
+    }
+
+    #result_nav #next_date_button{
+        grid-row: 2;
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+    #result_nav #older_button{
+        grid-row: 3;
+        grid-column: 1;
+    }
+
+    #result_nav #window_select{
+        grid-row: 3;
+        grid-column-start: 2;
+        grid-column-end: 4;
+    }
+
+    #result_nav #newer_button{
+        grid-row: 3;
+        grid-column: 4;
+    }
+}
+
+@media (min-width: 400px) and (max-width: 749px){
+    #result_nav{
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        grid-template-columns: 1fr 2fr 2fr 1fr;
+
+        max-width: 600px;
+    }
+
+    #result_nav *{
+        width: 100%;
+    }
+
+    #result_nav #oldest_button{
+        grid-row: 1;
+        grid-column: 1;
+    }
+
+    #result_nav #prev_date_button{
+        grid-row: 1;
+        grid-column: 2;
+    }
+
+    #result_nav #next_date_button{
+        grid-row: 1;
+        grid-column: 3;
+    }
+
+    #result_nav #newest_button{
+        grid-row: 1;
+        grid-column: 4;
+    }
+
+    #result_nav #older_button{
+        grid-row: 2;
+        grid-column: 1;
+    }
+
+    #result_nav #window_select{
+        grid-row: 2;
+        grid-column-start: 2;
+        grid-column-end: 4;
+    }
+
+    #result_nav #newer_button{
+        grid-row: 2;
+        grid-column: 4;
+    }
+}
+
+@media (min-width: 750px){
+    #result_nav{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
 }

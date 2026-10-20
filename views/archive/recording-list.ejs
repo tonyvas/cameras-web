@@ -14,28 +14,27 @@
 <body>
     <%- include('../partials/header', {active: '/archive/recordings'}) -%> 
 
-    <hgroup>
-        <h1><%= data.recordings.length %> <%= data.recordings.length == 1 ? 'Recording' : 'Recordings' %></h1>
-        
-        <% if (data.dateKey) { %>
-            <h2>
-                <%= utils.formatDate(utils.parseDateKey(data.dateKey)) %>
-                <br>
-                <%= utils.formatSeconds(data.windowStart/1000, false) %>
-                - 
-                <%= utils.formatSeconds((data.windowStart + data.windowDuration-1)/1000, false) %>
-            </h2>
-        <% } %>
-    </hgroup>
-
-
     <main>
-        <div id="result_nav">
-            <%- include('../partials/recording-list/results-nav') -%>
-        </div>
+        <hgroup>
+            <h1><%= data.recordings.length %> <%= data.recordings.length == 1 ? 'Recording' : 'Recordings' %></h1>
+            
+            <% if (data.dateKey) { %>
+                <h2>
+                    <%= utils.formatDate(utils.parseDateKey(data.dateKey)) %>
+                    <br>
+                    <%= utils.formatSeconds(data.windowStart/1000, false) %>
+                    - 
+                    <%= utils.formatSeconds((data.windowStart + data.windowDuration-1)/1000, false) %>
+                </h2>
+            <% } %>
+        </hgroup>
 
         <div id="controls">
             <%- include('../partials/recording-list/controls') -%>
+        </div>
+
+        <div id="result_nav">
+            <%- include('../partials/recording-list/results-nav') -%>
         </div>
 
         <div id="results">
