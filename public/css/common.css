@@ -9,8 +9,6 @@ html, body{
 body{
     display: grid;
     grid-template-rows: min-content minmax(0, 1fr);
-
-    overflow-y: hidden;
 }
 
 header{
