@@ -19,6 +19,14 @@
     text-align: center;
 }
 
+#recordings_table thead th{
+    position: sticky;
+    z-index: 1;
+    top: 0;
+
+    background-color: #333;
+}
+
 #recordings_table .separator_row td{
     font-weight: bold;
     padding: 10px;

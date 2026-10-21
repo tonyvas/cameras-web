@@ -30,81 +30,83 @@
             <h2>Recording Count</h2>
         </hgroup>
 
-        <table>
-            <colgroup>
-                <col class="date-col">
-
-                <% for (let source of data.sources) { %>
-                    <col class="source-col">
-                <% } %>
-
-                <col class="total-col">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>Date</th>
+        <div>
+            <table>
+                <colgroup>
+                    <col class="date-col">
 
                     <% for (let source of data.sources) { %>
-                        <th scope="col" title="ID: <%= source.id %>">
-                            <a href="/archive/recordings?src=<%= source.id %>">
-                                <%= source.name %>
-                            </a>
-                        </th>
+                        <col class="source-col">
                     <% } %>
 
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% 
-                    let colTotals = [];
-                    for (let i = 0; i < data.sources.length+1; i++){
-                        colTotals[i] = 0;
-                    }
-                %>
-
-                <% for (let dateKey of dateKeys) { %>
-                    <% let rowTotal = 0; %>
-                    
+                    <col class="total-col">
+                </colgroup>
+                <thead>
                     <tr>
-                        <th scope="row">
-                            <a href="/archive/recordings?date=<%= dateKey %>">
-                                <%= utils.formatDate(utils.parseDateKey(dateKey)) %>
-                            </a>
-                        </th>
-    
-                        <% for (let i = 0; i < data.sources.length; i++) { %>
-                            <%
-                                let source = data.sources[i];
-                                let counts = data.counts[i];
-                                let count = counts[dateKey] ? counts[dateKey] : 0;
+                        <th>Date</th>
 
-                                rowTotal += count;
-                                colTotals[i] += count;
-                            %>
-
-                            <td>
-                                <a href="/archive/recordings?src=<%= source.id %>&date=<%= dateKey %>">
-                                    <%= count %>
+                        <% for (let source of data.sources) { %>
+                            <th scope="col" title="ID: <%= source.id %>">
+                                <a href="/archive/recordings?src=<%= source.id %>">
+                                    <%= source.name %>
                                 </a>
-                            </td>
+                            </th>
                         <% } %>
 
-                        <td><%= rowTotal %></td>
-
-                        <% colTotals[colTotals.length-1] += rowTotal %>
+                        <th>Total</th>
                     </tr>
-                <% } %>
+                </thead>
+                <tbody>
+                    <% 
+                        let colTotals = [];
+                        for (let i = 0; i < data.sources.length+1; i++){
+                            colTotals[i] = 0;
+                        }
+                    %>
 
-                <tr>
-                    <th scope="row">Total</th>
+                    <% for (let dateKey of dateKeys) { %>
+                        <% let rowTotal = 0; %>
+                        
+                        <tr>
+                            <th scope="row">
+                                <a href="/archive/recordings?date=<%= dateKey %>">
+                                    <%= utils.formatDate(utils.parseDateKey(dateKey)) %>
+                                </a>
+                            </th>
+        
+                            <% for (let i = 0; i < data.sources.length; i++) { %>
+                                <%
+                                    let source = data.sources[i];
+                                    let counts = data.counts[i];
+                                    let count = counts[dateKey] ? counts[dateKey] : 0;
 
-                    <% for (let total of colTotals) { %>
-                        <td><%= total %></td>
+                                    rowTotal += count;
+                                    colTotals[i] += count;
+                                %>
+
+                                <td>
+                                    <a href="/archive/recordings?src=<%= source.id %>&date=<%= dateKey %>">
+                                        <%= count %>
+                                    </a>
+                                </td>
+                            <% } %>
+
+                            <td><%= rowTotal %></td>
+
+                            <% colTotals[colTotals.length-1] += rowTotal %>
+                        </tr>
                     <% } %>
-                </tr>
-            </tbody>
-        </table>
+
+                    <tr>
+                        <th scope="row">Total</th>
+
+                        <% for (let total of colTotals) { %>
+                            <td><%= total %></td>
+                        <% } %>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </main>
 </body>
 </html>

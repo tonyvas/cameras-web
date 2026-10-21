@@ -1,9 +1,58 @@
-table{
+body{
+    width: 100vw;
+    height: 100vh;
+}
+
+main{
+    width: 100%;
+    max-width: 95vw;
+}
+
+main div{
+    width: 100%;
+    overflow-x: scroll;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+main table{
     border: 1px solid black;
     text-align: center;
 }
 
-table th, table td{
+main table thead th,
+main table tbody th{
+    position: sticky;
+
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    
+    border: 1px solid black;
+    background-color: #444;
+}
+
+main table thead th{
+    top: 0;
+    z-index: 1;
+}
+
+main table tbody th{
+    left: 0;
+    z-index: 1;
+}
+
+main table thead th:first-child{
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+main table th,
+main table td{
     box-sizing: border-box;
     padding-left: 5px;
     padding-right: 5px;
@@ -11,7 +60,7 @@ table th, table td{
     border: 1px solid black;
 }
 
-table col{
+main table col{
     min-width: 100px;
 }
 

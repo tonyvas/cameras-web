@@ -1,24 +1,17 @@
-#media_container , #info_container{
-    width: 100%;
-    height: 100%;
+main{
+    width: 95%;
 }
 
-#media_container, #info_container{
-    display: flex;
-    flex-direction: column;
+/* #################### */
+/* ### VIDEO PLAYER ### */
+/* #################### */
+
+#media_container{
+    width: fit-content;
 }
-
-#info_container{
-    align-items: center;
-}
-
-
-
-
 
 video{
     width: 100%;
-    max-height: 75vh;
 }
 
 #controls{
@@ -29,53 +22,48 @@ video{
 
 #controls *{
     width: 100px;
-    margin: 10px;
     text-align: center;
 }
 
+/* ############## */
+/* ### TABLES ### */
+/* ############## */
 
+#details_container, #related_container{
+    width: 100%;
+    height: 100%;
+    max-width: 500px;
 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-
-#info_container table{
+main table{
     border: 1px solid black;
     text-align: center;
-    width: max-content;
+    width: 100%;
 }
 
-#info_container th, #info_container td{
+main table th,
+main table td{
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    
     border: 1px solid black;
 }
 
-.col_source{
-    width: 150px;
+.col_keys, .col_values{
+    width: 50%;
+    min-width: 125px;
 }
 
-.col_dates{
-    width: 200px;
+#related_table .action_button{
+    min-width: 80px;
+    width: 75%;
 }
-
-.col_duration{
-    width: 150px;
-}
-
-.col_size{
-    width: 150px;
-}
-
-.col_bitrate{
-    width: 150px;
-}
-
-.col_codecs{
-    width: 200px;
-}
-
-.col_actions{
-    width: 100px;
-}
-
-
 
 .recording_info_dates{
     display: flex;
@@ -84,4 +72,56 @@ video{
 
 .recording_info_dates .utc_date{
     filter: brightness(50%);
+}
+
+@media (max-width: 1099px) {
+    #media_container{
+        width: fit-content;
+    }
+
+    #details_container, #related_container{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (min-width: 1100px) {
+    main{
+        display: grid;
+        grid-template-rows: min-content min-content auto;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 10px;
+    }
+
+    main hgroup{
+        grid-row: 1;
+        grid-column-start: 1;
+        grid-column-end: 3;
+    }
+
+    #media_container{
+        grid-row: 2;
+        grid-column-start: 1;
+        grid-column-end: 3;
+
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #media_container video{
+        max-height: 75vh;
+    }
+
+    #details_container{
+        grid-row: 3;
+        grid-column: 1;
+        margin-left: auto;
+    }
+    
+    #related_container{
+        grid-row: 3;
+        grid-column: 2;
+        margin-right: auto;
+    }
 }
