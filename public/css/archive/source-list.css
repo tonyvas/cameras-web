@@ -18,6 +18,10 @@ main div{
 
 main table{
     text-align: center;
+    
+    margin: auto;
+
+    box-sizing: border-box;
     border: 1px solid black;
 }
 
@@ -28,21 +32,19 @@ main table th{
     background-color: #444;
 }
 
-main table{
-    margin-left: 125px;
-}
-
 main table thead th{
-    top: 1;
+    top: 0;
     z-index: 1;
 }
 
 main table tbody th{
-    left: 1;
+    left: 0;
     z-index: 1;
 }
 
 main table thead th:first-child{
+    top: 0;
+    left: 0;
     z-index: 2;
 }
 
