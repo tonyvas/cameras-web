@@ -22,9 +22,9 @@
                 <h2>
                     <%= utils.formatDate(utils.parseDateKey(data.dateKey)) %>
                     <br>
-                    <%= utils.formatSeconds(data.windowStart/1000, false) %>
+                    <%= utils.formatSeconds(data.windowDuration * (data.windowPage-1) / 1000) %>
                     - 
-                    <%= utils.formatSeconds((data.windowStart + data.windowDuration-1)/1000, false) %>
+                    <%= utils.formatSeconds(data.windowDuration * data.windowPage / 1000 - 1) %>
                 </h2>
             <% } %>
         </hgroup>

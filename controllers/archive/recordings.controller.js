@@ -19,19 +19,18 @@ router.get('/', async (req, res, next) => {
         const QUERY_KEY_SOURCES = 'src';
         const QUERY_KEY_MACRO = 'macro';
         const QUERY_KEY_WINDOW_DATE = 'date';
-        const QUERY_KEY_WINDOW_START = 'start';
         const QUERY_KEY_WINDOW_DURATION = 'duration';
+        const QUERY_KEY_WINDOW_PAGE = 'page'
 
-        const DEFAULT_WINDOW_START = 0;
         const DEFAULT_WINDOW_DURATION = 3 * HOUR;
+        const DEFAULT_WINDOW_PAGE = 1;
 
         const allSources = await sourcesService.getSources();
 
         let selectedSources = allSources;
-        let macro = null;
         let dateKey = null;
-        let timeStart = DEFAULT_WINDOW_START;
         let duration = DEFAULT_WINDOW_DURATION;
+        let page = DEFAULT_WINDOW_PAGE;
 
         // Sources
         if (req.query[QUERY_KEY_SOURCES]){
@@ -52,63 +51,65 @@ router.get('/', async (req, res, next) => {
             duration = utils.parseTimeKey(req.query[QUERY_KEY_WINDOW_DURATION]);
         }
 
-        // If macro set, use that
-        if (req.query[QUERY_KEY_MACRO]){
-            macro = req.query[QUERY_KEY_MACRO].toLowerCase();
-        }
-        // Else parse date and time
-        else{
-            // If date set, use that
-            if (req.query[QUERY_KEY_WINDOW_DATE]){
-                dateKey = req.query[QUERY_KEY_WINDOW_DATE].toLowerCase();
+        if (req.query[QUERY_KEY_MACRO] || !req.query[QUERY_KEY_WINDOW_DATE]){
+            // If macro is given, use it
+            // If no macro and no date given, assume macro for latest
+            let macro = req.query[QUERY_KEY_MACRO] ? req.query[QUERY_KEY_MACRO].toLowerCase() : DATE_MACRO_NEWEST;
 
-                // Start time
-                if (req.query[QUERY_KEY_WINDOW_START]){
-                    timeStart = utils.parseTimeKey(req.query[QUERY_KEY_WINDOW_START]);
-                }
+            // The newest/oldest recording, depending on macro
+            let recording = null;
+
+            if (macro == DATE_MACRO_NEWEST){
+                recording = await recordingsService.getNewestRecording(selectedSources);
             }
-            // Else assume latest
+            else if (macro == DATE_MACRO_OLDEST){
+                recording = await recordingsService.getOldestRecording(selectedSources);
+            }
             else{
-                macro = DATE_MACRO_NEWEST;
+                throw new BadRequestError(`Invalid macro: ${macro}!`);
             }
-        }
 
-        // If date macro
-        if (macro == DATE_MACRO_NEWEST || macro == DATE_MACRO_OLDEST){
-            let func = macro == DATE_MACRO_NEWEST ? recordingsService.getNewestRecordings : recordingsService.getOldestRecordings;
-            let recordings = await func(selectedSources);
+            // If got recording, set date and page based on it
+            if (recording){
+                let timeOffset = (recording.startTS - recording.utcOffset) % DAY;
 
-            if (recordings.length > 0){
-                let recording = recordings[0];
                 dateKey = utils.formatDateKey(new Date(recording.startTS - recording.utcOffset));
-                
-                let time = (recording.startTS - recording.utcOffset) % DAY;
-                timeStart = Math.floor(time / duration) * duration;
+                page = Math.floor(timeOffset / duration) + 1
             }
         }
-        // If macro set but unknown, throw error
-        else if (macro != null){
-            throw new BadRequestError(`Invalid macro: ${macro}!`);
+        else{
+            // If only date given, parse it
+            dateKey = req.query[QUERY_KEY_WINDOW_DATE].toLowerCase();
+
+            // Get page if available
+            if (req.query[QUERY_KEY_WINDOW_PAGE]){
+                page = Number.parseInt(req.query[QUERY_KEY_WINDOW_PAGE]);
+            }
         }
 
         let recordings = [];
 
-        // If date key is available, fetch recordings
+        // If date available, get recordings
+        // Otherwise, render empty list (if no recordings available)
         if (dateKey){
-            // Format time into keys
+            // Convert duration and page into start/end times
+            let timeStart = Math.max(0, duration * (page-1));
+            let timeEnd = Math.min(DAY-1, timeStart + duration);
+
+            // Format as keys
             let timeStartKey = utils.formatTimeKey(timeStart);
-            let timeEndKey = utils.formatTimeKey(timeStart + duration);
+            let timeEndKey = utils.formatTimeKey(timeEnd);
             
             recordings = await recordingsService.getRecordings(selectedSources, dateKey, timeStartKey, timeEndKey);
         }
-
+        
         res.render('archive/recording-list.ejs', {
             data: {
                 sources: allSources,
                 recordings: recordings,
                 dateKey: dateKey,
-                windowStart: timeStart,
                 windowDuration: duration,
+                windowPage: page,
             },
             utils: utils
         });

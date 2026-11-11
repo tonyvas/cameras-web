@@ -4,8 +4,8 @@ const DATE_MACRO_OLDEST = 'oldest';
 const QUERY_KEY_SOURCES = 'src';
 const QUERY_KEY_MACRO = 'macro';
 const QUERY_KEY_WINDOW_DATE = 'date';
-const QUERY_KEY_WINDOW_START = 'start';
 const QUERY_KEY_WINDOW_DURATION = 'duration';
+const QUERY_KEY_WINDOW_PAGE = 'page';
 
 const SOURCE_SEPARATOR = '-';
 const SOURCE_ID_ATTR = 'data-id';
@@ -16,54 +16,44 @@ const jumpDateControls = document.querySelector('#jump_date_controls');
 const sourceCheckboxes = sourceControls.querySelectorAll('.source_checkbox');
 const jumpDateInput = jumpDateControls.querySelector('#jump_date_input');
 
-function goWindowPage(dateKey, timeKey=null, durationKey=null){
+function goWindowPage(dateKey, page, durationKey=null){
     let url = new URL(window.location);
     let params = url.searchParams;
 
     params.delete(QUERY_KEY_MACRO);
-    params.set(QUERY_KEY_WINDOW_DATE, dateKey);
 
-    if (timeKey){
-        params.set(QUERY_KEY_WINDOW_START, timeKey);
-    }
-    else{
-        params.delete(QUERY_KEY_WINDOW_START);
-    }
+    params.set(QUERY_KEY_WINDOW_DATE, dateKey);
+    params.set(QUERY_KEY_WINDOW_PAGE, page);
 
     if (durationKey){
         params.set(QUERY_KEY_WINDOW_DURATION, durationKey);
     }
-    else{
-        params.delete(QUERY_KEY_WINDOW_DURATION);
+
+    window.location = url;
+}
+
+function goMacroPage(macro, durationKey=null){
+    let url = new URL(window.location);
+    let params = url.searchParams;
+
+    params.delete(QUERY_KEY_WINDOW_DATE);
+    params.delete(QUERY_KEY_WINDOW_PAGE);
+    
+    params.set(QUERY_KEY_MACRO, macro);
+
+    if (durationKey){
+        params.set(QUERY_KEY_WINDOW_DURATION, durationKey);
     }
 
     window.location = url;
 }
 
 function goNewestPage(durationKey=null){
-    let url = new URL(window.location);
-    let params = url.searchParams;
-
-    params.delete(QUERY_KEY_WINDOW_DATE);
-    params.delete(QUERY_KEY_WINDOW_START);
-
-    params.set(QUERY_KEY_MACRO, DATE_MACRO_NEWEST);
-    params.set(QUERY_KEY_WINDOW_DURATION, durationKey);
-
-    window.location = url;
+    goMacroPage(DATE_MACRO_NEWEST, durationKey);
 }
 
 function goOldestPage(durationKey=null){
-    let url = new URL(window.location);
-    let params = url.searchParams;
-
-    params.delete(QUERY_KEY_WINDOW_DATE);
-    params.delete(QUERY_KEY_WINDOW_START);
-
-    params.set(QUERY_KEY_MACRO, DATE_MACRO_OLDEST);
-    params.set(QUERY_KEY_WINDOW_DURATION, durationKey);
-
-    window.location = url;
+    goMacroPage(DATE_MACRO_OLDEST, durationKey);
 }
 
 function loadInitialSourceControls(params){

@@ -1,9 +1,10 @@
 <%
-    const DAY = 24*3600*1000;
+    const HOUR = 3600 * 1000;
+    const DAY = 24 * HOUR;
 
-    // 8 3-hour windows
-    const OPTION_COUNT = 8;
-    const OPTION_DURATION = DAY / OPTION_COUNT;
+    // Divide day into pages
+    let pageDuration = data.windowDuration;
+    let pageCount = Math.ceil(DAY / pageDuration);
 
     // Dates
     let currDate = prevDate = nextDate = null;
@@ -26,16 +27,27 @@
     }
 
     // Window dates and times
-    let currWindowTime = data.windowStart;
+    let currPage = data.windowPage;
 
-    let prevWindowTime = (DAY + currWindowTime - OPTION_DURATION) % DAY;
-    let prevWindowDate = prevWindowTime <= currWindowTime ? currDate : prevDate;
+    // Naively assume prev/next page and date
+    let prevPage = currPage - 1;
+    let nextPage = currPage + 1;
+    let prevPageDate = nextPageDate = currDate;
 
-    let nextWindowTime = (DAY + currWindowTime + OPTION_DURATION) % DAY;
-    let nextWindowDate = nextWindowTime >= currWindowTime ? currDate : nextDate;
+    if (currPage == 1){
+        // If currently first page, previous page is last page of previous date
+        prevPage = pageCount;
+        prevPageDate = prevDate;
+    }
 
-    // Format keys
-    let currDateKey = prevDateKey = nextDateKey = prevWindowDateKey = nextWindowDateKey = null;
+    if (currPage == pageCount){
+        // If currently last page, next page is first page of next date
+        nextPage = 1;
+        nextPageDate = nextDate;
+    }
+
+    // Format date keys
+    let currDateKey = prevDateKey = nextDateKey = prevPageDateKey = nextPageDateKey = null;
 
     // If dates are valid, format keys
     if (currDate){
@@ -43,16 +55,12 @@
         prevDateKey = utils.formatDateKey(prevDate);
         nextDateKey = utils.formatDateKey(nextDate);
     
-        prevWindowDateKey = utils.formatDateKey(prevWindowDate);
-        nextWindowDateKey = utils.formatDateKey(nextWindowDate);
+        prevPageDateKey = utils.formatDateKey(prevPageDate);
+        nextPageDateKey = utils.formatDateKey(nextPageDate);
     }
 
-    let currWindowTimeKey = utils.formatTimeKey(currWindowTime);
-    let prevWindowTimeKey = utils.formatTimeKey(prevWindowTime);
-    let nextWindowTimeKey = utils.formatTimeKey(nextWindowTime);
-
+    // Format duration as key
     let currDurationKey = utils.formatTimeKey(data.windowDuration);
-    let optDurationKey = utils.formatTimeKey(OPTION_DURATION);
 %>
 
 <!-- Oldest button -->
@@ -70,7 +78,7 @@
         class="date-button"
         id="prev_date_button"
         title="Previous Date"
-        onclick="goWindowPage('<%= prevDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
+        onclick="goWindowPage('<%= prevDateKey %>', '<%= currPage %>', '<%= currDurationKey %>')">
         <%= utils.formatDate(prevDate) %>
     </button>
 <% } else { %>
@@ -83,43 +91,43 @@
         class="arrow-button"
         id="older_button"
         title="Older"
-        onclick="goWindowPage('<%= prevWindowDateKey %>', '<%= prevWindowTimeKey %>', '<%= currDurationKey %>')">
+        onclick="goWindowPage('<%= prevPageDateKey %>', '<%= prevPage %>', '<%= currDurationKey %>')">
         &lt;
     </button>
 <% } else { %>
     <button class="arrow-button" id="older_button" title="Older" disabled>&lt;</button>
 <% } %>
 
-<select
-    id="window_select"
-    autocomplete="off"
-    <% if (currDate) { %>
-        onchange="onSelectChange(this.selectedOptions[0]);"
-    <% } else { %>
-        disabled
+<select id="window_duration_select" title="Duration" autocomplete="off" onchange="onDurationSelectChange(this);">
+    <% for (let hours of [1, 2, 3, 4, 6, 8, 12, 24]) { %>
+        <% let duration = hours * HOUR %>
+        
+        <option value="<%= hours %>,<%= utils.formatTimeKey(duration) %>" <%= duration == data.windowDuration ? 'selected':'' %>>
+            <%= hours %>h
+        </option>
     <% } %>
->
-    <% for (let i = 0; i < OPTION_COUNT; i++){ %>
+</select>
+
+<select id="window_page_select" title="Page" autocomplete="off" onchange="onPageSelectChange(this);">
+    <% for (let page = 1; page <= pageCount; page++){ %>
         <%
-            let start = i * OPTION_DURATION;
-            let end = (i+1) * OPTION_DURATION;
+            let start = (page-1) * pageDuration;
+            let end = page * pageDuration - 1;
         %>
 
-        <option
-            <% if (currDate) { %> value="<%= currDateKey %>,<%= utils.formatTimeKey(start) %>,<%= optDurationKey %>" <% } %>
-            <%= start == data.windowStart ? 'selected' : '' %>>
-            <%= utils.formatSeconds(start/1000, false) %> - <%= utils.formatSeconds(end/1000 - 1, false) %>
+        <option value="<%= currDurationKey %>,<%= page %>" <%= page == currPage ? 'selected' : '' %>>
+            <%= utils.formatSeconds(start/1000) %> - <%= utils.formatSeconds(end/1000) %>
         </option>
     <% } %>
 </select>
 
 <!-- Next window button -->
-<% if (prevDate) { %>
+<% if (nextDate) { %>
     <button
         class="arrow-button"
         id="newer_button"
         title="Newer"
-        onclick="goWindowPage('<%= nextWindowDateKey %>', '<%= nextWindowTimeKey %>', '<%= currDurationKey %>')">
+        onclick="goWindowPage('<%= nextPageDateKey %>', '<%= nextPage %>', '<%= currDurationKey %>')">
         &gt;
     </button>
 <% } else { %>
@@ -127,12 +135,12 @@
 <% } %>
 
 <!-- Next date button -->
-<% if (prevDate) { %>
+<% if (nextDate) { %>
     <button
         class="date-button"
         id="next_date_button"
         title="Next Date"
-        onclick="goWindowPage('<%= nextDateKey %>', '<%= currWindowTimeKey %>', '<%= currDurationKey %>')">
+        onclick="goWindowPage('<%= nextDateKey %>', '<%= currPage %>', '<%= currDurationKey %>')">
         <%= utils.formatDate(nextDate) %>
     </button>
 <% } else { %>
@@ -149,7 +157,56 @@
 </button>
 
 <script>
-    function onSelectChange(option){
-        goWindowPage(...option.value.split(','));
+    function onDurationSelectChange(select){
+        if (select.selectedOptions.length == 0){
+            return;
+        }
+
+        const pageSelect = document.getElementById('window_page_select');
+
+        let parts = select.selectedOptions[0].value.split(',');
+        let hours = Number.parseInt(parts[0]);
+        let durationKey = parts[1];
+
+        while (pageSelect.children.length > 0){
+            pageSelect.removeChild(pageSelect.children[0]);
+        }
+
+        for (let page = 1; page <= 24 / hours; page++){
+            let option = document.createElement('option');
+            pageSelect.appendChild(option);
+
+            let startSec = (page-1) * hours * 3600;
+            let endSec = page * hours * 3600 - 1;
+            
+            option.value = `${durationKey},${page}`;
+            option.innerHTML = `${formatSeconds(startSec)} - ${formatSeconds(endSec)}`;
+        }
+
+        pageSelect.selectedIndex = -1;
+    }
+
+    function onPageSelectChange(select){
+        if (select.selectedOptions.length == 0){
+            return;
+        }
+
+        let parts = select.selectedOptions[0].value.split(',');
+        let durationKey = parts[0];
+        let page = Number.parseInt(parts[1]);
+
+        goWindowPage('<%= currDateKey %>', page, durationKey);
+    }
+
+    function formatSeconds(seconds){
+        seconds = Math.floor(seconds);
+
+        let hours = Math.floor(seconds / 3600);
+        seconds %= 3600;
+
+        let minutes = Math.floor(seconds / 60);
+        seconds %= 60;
+
+        return [hours, minutes, seconds].map(v => v.toString().padStart(2, '0')).join(':');
     }
 </script>

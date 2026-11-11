@@ -50,7 +50,7 @@ function padNumber(num, digits){
     return num.toString().padStart(digits, '0');
 }
 
-function formatSeconds(seconds, brief=true){
+function formatSeconds(seconds, brief=false){
     let s = Math.floor(seconds);
 
     let h = Math.floor(s / 3600);
@@ -147,6 +147,10 @@ function parseDateKey(key){
 }
 
 function formatTimeKey(ms){
+    if (ms < 0){
+        throw new Error('Cannot format negative time!');
+    }
+    
     let seconds = Math.floor(ms/1000);
     
     let hours = Math.floor(seconds / 3600);

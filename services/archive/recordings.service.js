@@ -22,6 +22,52 @@ async function getRecordingById(recordingId){
     return Recording.fromDatabaseObject(source, row);
 }
 
+async function getNewestRecording(sources){
+    let conditions = [];
+    let params = [];
+
+    conditions.push(`source_id IN (${sources.map(() => '?').join(',')})`);
+    sources.map(s => params.push(s.id));
+
+    let sql = `
+        SELECT * FROM recording
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY (start_ts-utc_offset) DESC, start_ts DESC
+        LIMIT 1
+    `;
+
+    let rows = await db.query(sql, params);
+    let recordings = rows.map(row => Recording.fromDatabaseObject(
+        sources.find(s => s.id == row['source_id']),
+        row
+    ));
+
+    return recordings.length > 0 ? recordings[0] : null
+}
+
+async function getOldestRecording(sources){
+    let conditions = [];
+    let params = [];
+
+    conditions.push(`source_id IN (${sources.map(() => '?').join(',')})`);
+    sources.map(s => params.push(s.id));
+
+    let sql = `
+        SELECT * FROM recording
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY (start_ts-utc_offset) ASC, start_ts ASC
+        LIMIT 1
+    `;
+
+    let rows = await db.query(sql, params);
+    let recordings = rows.map(row => Recording.fromDatabaseObject(
+        sources.find(s => s.id == row['source_id']),
+        row
+    ));
+
+    return recordings.length > 0 ? recordings[0] : null
+}
+
 async function getEndRecordings(sources, latest=true){
     let conditions = [];
     let params = [];
@@ -126,4 +172,8 @@ async function getRelatedRecordings(recording){
     return recordings;
 }
 
-module.exports = { getRecordingById, getNewestRecordings, getOldestRecordings, getRecordings, getRecordingNeighbors, getRelatedRecordings };
+module.exports = {
+    getRecordingById, getNewestRecording, getOldestRecording,
+    getNewestRecordings, getOldestRecordings, getRecordings,
+    getRecordingNeighbors, getRelatedRecordings
+};
