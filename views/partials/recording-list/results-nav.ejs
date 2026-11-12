@@ -108,7 +108,7 @@
     <% } %>
 </select>
 
-<select id="window_page_select" title="Page" autocomplete="off" onchange="onPageSelectChange(this);">
+<select id="window_page_select" title="Page" autocomplete="off" onchange="onPageSelectChange(this);" <%= pageCount == 1 ? 'disabled':'' %>>
     <% for (let page = 1; page <= pageCount; page++){ %>
         <%
             let start = (page-1) * pageDuration;
@@ -167,12 +167,13 @@
         let parts = select.selectedOptions[0].value.split(',');
         let hours = Number.parseInt(parts[0]);
         let durationKey = parts[1];
+        let pageCount = 24 / hours;
 
         while (pageSelect.children.length > 0){
             pageSelect.removeChild(pageSelect.children[0]);
         }
 
-        for (let page = 1; page <= 24 / hours; page++){
+        for (let page = 1; page <= pageCount; page++){
             let option = document.createElement('option');
             pageSelect.appendChild(option);
 
@@ -183,7 +184,15 @@
             option.innerHTML = `${formatSeconds(startSec)} - ${formatSeconds(endSec)}`;
         }
 
-        pageSelect.selectedIndex = -1;
+        if (pageCount == 1){
+            pageSelect.selectedIndex = 0;
+            pageSelect.disabled = true;
+            return goWindowPage('<%= currDateKey %>', 1, durationKey);
+        }
+        else{
+            pageSelect.selectedIndex = -1;
+            pageSelect.disabled = false;
+        }
     }
 
     function onPageSelectChange(select){

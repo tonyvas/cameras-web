@@ -118,7 +118,7 @@ function onJumpToDate(){
     let dateStr = jumpDateInput.value;
     let dateKey = dateStr.replaceAll('-', '');
 
-    goWindowPage(dateKey);
+    goWindowPage(dateKey, 1);
 }
 
 loadInitialControlValues();
